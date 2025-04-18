@@ -2,25 +2,21 @@ import { createClient } from 'redis';
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('CACHE_PORT:', process.env.CACHE_PORT);
+let rawPort = process.env.CACHE_PORT;
 
-if (!process.env.CACHE_PORT) {
-  throw new Error('CACHE_PORT is not a valid number.');
+if (!rawPort || isNaN(Number(rawPort))) {
+  rawPort = '6379';
 }
 
-const port = Number(process.env.CACHE_PORT);
-if (isNaN(port)) {
-  throw new Error('CACHE_PORT is not a valid number.');
-}
+const port = Number(rawPort);
 
 export const redisClient = createClient({
   socket: {
-    host: process.env.CACHE_HOST,
-    port: Number(process.env.CACHE_PORT),
-  },
-  username: process.env.CACHE_USERNAME || undefined,
-  password: process.env.CACHE_PASSWORD || undefined,
+    host: process.env.CACHE_HOST || 'localhost',
+    port,
+  }
 });
+
 
 redisClient.on('error', (err) => {
   console.error('❌ Redis Client Error:', err);
