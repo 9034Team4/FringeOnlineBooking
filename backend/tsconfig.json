@@ -9,11 +9,13 @@
   "strict": true,
   "skipLibCheck": true,
   "baseUrl": "./src",
+  "outDir": "./dist",
+  "rootDir": "./src",
   "paths": {
     "config/*": ["config/*"],
     "entities/*": ["entities/*"],
     "utils/*": ["utils/*"]
   }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "src"]
 }
