@@ -4,6 +4,10 @@ dotenv.config();
 
 console.log('CACHE_PORT:', process.env.CACHE_PORT);
 
+if (!process.env.CACHE_PORT) {
+  throw new Error('CACHE_PORT is not a valid number.');
+}
+
 const port = Number(process.env.CACHE_PORT);
 if (isNaN(port)) {
   throw new Error('CACHE_PORT is not a valid number.');
