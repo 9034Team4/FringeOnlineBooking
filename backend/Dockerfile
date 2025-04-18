@@ -1,18 +1,12 @@
-# Use Node.js LTS as base image
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install deps
-COPY backend/package*.json ./
-RUN npm install --production
+COPY package*.json ./
+RUN npm install
 
-# Copy source code
-COPY backend .
+COPY . ./
 
-# Expose backend port
 EXPOSE 3000
 
-# Run backend
-CMD ["node", "index.js"]
+CMD ["node", "index.js"]  # or "dist/main.js" if using NestJS
