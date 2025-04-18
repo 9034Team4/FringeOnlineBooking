@@ -28,8 +28,11 @@ jobs:
               git clone https://github.com/9034Team4/FringeOnlineBooking.git fringeonlinebooking
             fi
 
-            cd fringeonlinebooking
-            git pull origin main
+            cd fringeonlinebooking            
+            
+            git fetch origin
+            git checkout dev
+            git pull origin dev
 
             docker-compose build backend
             docker-compose up -d backend

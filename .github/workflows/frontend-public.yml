@@ -22,6 +22,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/fringeonlinebooking
-            git pull origin main
+                        
+            git fetch origin
+            git checkout dev
+            git pull origin dev
+
             docker-compose build frontend-public
             docker-compose up -d frontend-public
