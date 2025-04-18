@@ -48,7 +48,7 @@ services:
     container_name: mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD:
+      MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: fringe2025bookingdb_dev
       MYSQL_USER: root
       MYSQL_PASSWORD:
