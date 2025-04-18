@@ -7,7 +7,7 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Fringe 2025 Online Booking API',
+      title: 'Fringe 2025 Online Booking API ',
       version: '1.0.0',
       description: 'API documentation for Fringe 2025 booking system',
     },
