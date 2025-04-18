@@ -1,26 +1,18 @@
-# ========= Stage 1: Build TS =========
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build 
-
-# ========= Stage 2: Run app =========
+# Use Node.js LTS as base image
 FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+# Copy package files and install deps
+COPY backend/package*.json ./
+RUN npm install --production
 
-RUN npm install --omit=dev
+# Copy source code
+COPY backend .
 
-# if .env exists, copy
-COPY .env .env
-
+# Expose backend port
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+
+# Run backend
+CMD ["node", "index.js"]

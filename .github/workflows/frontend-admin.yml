@@ -1,0 +1,27 @@
+name: CI/CD - Admin Frontend
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'frontend-admin/**'
+      - '.github/workflows/frontend-admin.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SSH to EC2 and deploy Admin Frontend
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/fringeonlinebooking
+            git pull origin main
+            docker-compose build frontend-admin
+            docker-compose up -d frontend-admin

@@ -1,0 +1,43 @@
+version: '3'
+services:
+  gateway:
+    image: nginx:alpine
+    container_name: gateway
+    ports:
+      - "90:90"
+    volumes:
+      - ./docker/nginx/booking.conf:/etc/nginx/conf.d/booking.conf
+    networks:
+      - mynet
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: backend
+    restart: always
+    networks:
+      - mynet
+    ports:
+      - "3000:3000"  # Optional if only internal use
+
+  frontend-admin:
+    build: ./frontend-admin
+    container_name: admin-ui
+    restart: always
+    networks:
+      - mynet
+    ports:
+      - "8081:80"  # Optional if only internal use
+
+  frontend-public:
+    build: ./frontend-public
+    container_name: public-ui
+    restart: always
+    networks:
+      - mynet
+    ports:
+      - "8082:80"  # Optional if only internal use
+
+networks:
+  mynet:
+    driver: bridge
