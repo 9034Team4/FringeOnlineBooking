@@ -16,11 +16,14 @@ services:
     container_name: backend
     restart: always
     env_file:
-      - /home/ec2-user/envs/backend.env   # ✅ persistent path
+      - /home/ec2-user/envs/backend.env
+    depends_on:
+      - mysql
+      - redis
     networks:
       - mynet
     ports:
-      - "3000:3000"  # Optional if only internal use
+      - "3000:3000"
 
   frontend-admin:
     build: ./frontend-admin
@@ -29,7 +32,7 @@ services:
     networks:
       - mynet
     ports:
-      - "8081:80"  # Optional if only internal use
+      - "8081:80"
 
   frontend-public:
     build: ./frontend-public
@@ -38,8 +41,36 @@ services:
     networks:
       - mynet
     ports:
-      - "8082:80"  # Optional if only internal use
+      - "8082:80"
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: fringe2025bookingdb_dev
+      MYSQL_USER: root
+      MYSQL_PASSWORD:
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - mynet
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - mynet
 
 networks:
   mynet:
     driver: bridge
+
+volumes:
+  mysql_data:
