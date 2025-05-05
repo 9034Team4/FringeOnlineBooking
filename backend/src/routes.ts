@@ -15,10 +15,12 @@ import { PublicEventController } from './controllers/public/PublicEventControlle
 import { BookingController } from './controllers/public/BookingController';
 import { UserAuthController } from './controllers/public/UserAuthController';
 import { PaymentController } from './controllers/public/PaymentController';
+import { TicketController } from './controllers/public/TicketController';
 
 import { HealthController } from './controllers/HealthController';
 
 const router = Router();
+const ticketController = new TicketController();
 
 // 🌐 Public Booking Portal Routes
 
@@ -93,6 +95,118 @@ router.post('/auth/register', UserAuthController.register);
  *         description: Login successful
  */
 router.post('/auth/login', UserAuthController.login);
+
+/**
+ * @swagger
+ * /tickets:
+ *   post:
+ *     summary: Book a new ticket
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               ticketType:
+ *                 type: string
+ *               seatNumber:
+ *                 type: string
+ *               section:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Ticket booked successfully
+ */
+router.post('/tickets', authenticateJWT, ticketController.bookTicket.bind(ticketController));
+
+/**
+ * @swagger
+ * /tickets/{id}:
+ *   get:
+ *     summary: Get ticket details
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Ticket details returned
+ */
+router.get('/tickets/:id', authenticateJWT, ticketController.getTicketDetails.bind(ticketController));
+
+/**
+ * @swagger
+ * /tickets/user:
+ *   get:
+ *     summary: Get all tickets for the current user
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's tickets returned
+ */
+router.get('/tickets/user', authenticateJWT, ticketController.getUserTickets.bind(ticketController));
+
+/**
+ * @swagger
+ * /tickets/{id}/cancel:
+ *   post:
+ *     summary: Cancel a ticket
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Ticket cancelled successfully
+ */
+router.post('/tickets/:id/cancel', authenticateJWT, ticketController.cancelTicket.bind(ticketController));
+
+/**
+ * @swagger
+ * /tickets/{id}/validate:
+ *   post:
+ *     summary: Validate a ticket (for event staff)
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Ticket validated successfully
+ */
+router.post('/tickets/:id/validate', authenticateJWT, authorizeRole('staff'), ticketController.validateTicket.bind(ticketController));
 
 /**
  * @swagger

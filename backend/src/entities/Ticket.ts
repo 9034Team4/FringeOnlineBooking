@@ -5,37 +5,92 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
 import { Event } from './Event';
-import { Seat } from './Seat';
 import { User } from './User';
+import { Booking } from './Booking';
+
+export enum TicketType {
+  REGULAR = 'REGULAR',
+  VIP = 'VIP',
+  STUDENT = 'STUDENT',
+  SENIOR = 'SENIOR'
+}
+
+export enum TicketStatus {
+  VALID = 'VALID',
+  USED = 'USED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
+}
 
 /**
  * A purchasable ticket for an event, optionally tied to a seat.
  */
 @Entity()
 export class Ticket {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-  @ManyToOne(() => Event, (event) => event.tickets)
+  @ManyToOne(() => Event, event => event.tickets)
   event!: Event;
 
-  @ManyToOne(() => Seat, { nullable: true })
-  seat?: Seat; // Optional assigned seat
+  @ManyToOne(() => User, user => user.tickets)
+  user!: User;
 
-  @Column()
+  @ManyToOne(() => Booking, booking => booking.tickets)
+  booking!: Booking;
+
+  @Column({
+    type: 'enum',
+    enum: TicketType,
+    default: TicketType.REGULAR
+  })
+  type!: TicketType;
+
+  @Column('decimal', { precision: 10, scale: 2 })
   price!: number;
 
-  @Column()
-  ticketType!: string; // E.g., General, VIP
+  @Column({
+    type: 'enum',
+    enum: TicketStatus,
+    default: TicketStatus.VALID
+  })
+  status!: TicketStatus;
 
-  @Column()
-  qrCode!: string; // QR code for validation at entry
+  @Column({ nullable: true })
+  seatNumber?: string;
 
-  @Column()
-  isSold!: boolean; // Indicates if ticket has been purchased
+  @Column({ nullable: true })
+  section?: string;
 
-  buyer?: number; // The user who bought the ticket
+  @Column({ nullable: true })
+  qrCode!: string;
+
+  @Column({ default: false })
+  isScanned!: boolean;
+
+  @Column({ nullable: true })
+  scannedAt?: Date;
+
+  @Column({ nullable: true })
+  scannedBy?: string;
+
+  @Column({ default: false })
+  isRefunded!: boolean;
+
+  @Column({ nullable: true })
+  refundedAt?: Date;
+
+  @Column({ nullable: true })
+  refundReason?: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }
 

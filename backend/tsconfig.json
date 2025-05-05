@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
-  "experimentalDecorators": true,
-  "emitDecoratorMetadata": true,
-  "target": "es2016",
-  "module": "commonjs",
-  "esModuleInterop": true,
-  "forceConsistentCasingInFileNames": true,
-  "strict": true,
-  "skipLibCheck": true,
-  "baseUrl": "./src",
-  "outDir": "./dist",
-  "rootDir": "./src",
-  "paths": {
-    "config/*": ["config/*"],
-    "entities/*": ["entities/*"],
-    "utils/*": ["utils/*"]
-  }
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es2016",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@entities/*": ["entities/*"],
+      "@utils/*": ["utils/*"]
+    }
   },
-  "include": ["src/**/*", "src"]
+  "include": ["src/**/*"]
 }
