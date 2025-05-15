@@ -96,4 +96,8 @@ export class User {
   /** Timestamp of last update */
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  /** Timestamp of last login */
+  @Column({ nullable: true })
+  lastLogin?: Date;
 }
