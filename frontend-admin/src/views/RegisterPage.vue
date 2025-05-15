@@ -19,21 +19,27 @@
       <h2>Sign Up</h2>
 
       <form @submit.prevent="submit">
-        <label>YOUR NAME</label>
-        <input v-model="name" type="text" placeholder="Enter your name" required />
+        <label>YOUR EMAIL</label>
+        <input v-model="email" type="email" placeholder="Enter your email" required />
+        <div v-if="errorEmail" class="error-msg">{{ errorEmail }}</div>
 
         <label>PASSWORD</label>
         <input v-model="password" type="password" placeholder="Enter your password" required />
 
         <label>CONFIRM PASSWORD</label>
         <input v-model="confirmPassword" type="password" placeholder="Enter your password" required />
+        <div v-if="errorPassword" class="error-msg">{{ errorPassword }}</div>
 
-        <button type="submit" class="pink-btn">Sign Up</button>
+        <button type="submit" class="pink-btn" :disabled="isLoading">
+          <span v-if="isLoading">Signing up...</span>
+          <span v-else>Sign Up</span>
+        </button>
+        <div v-if="successMsg" class="success-msg">{{ successMsg }}</div>
       </form>
 
       <div class="divider">Or</div>
 
-      <button class="google-btn">
+      <button class="google-btn" @click="googleSignUp">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
         Sign up with Google
       </button>
@@ -43,18 +49,51 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const name = ref('')
+const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const errorEmail = ref('')
+const errorPassword = ref('')
+const successMsg = ref('')
+const isLoading = ref(false)
+const router = useRouter()
+
+function validateEmail(val) {
+  // Simple email regex
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
+}
 
 const submit = () => {
-  if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match!')
+  errorEmail.value = ''
+  errorPassword.value = ''
+  successMsg.value = ''
+
+  if (!email.value.trim()) {
+    errorEmail.value = 'Email is required.'
     return
   }
-  console.log('Registering:', { name: name.value, password: password.value })
-  // handle signup logic
+  if (!validateEmail(email.value)) {
+    errorEmail.value = 'Please enter a valid email address.'
+    return
+  }
+  if (password.value !== confirmPassword.value) {
+    errorPassword.value = 'Passwords do not match.'
+    return
+  }
+  isLoading.value = true
+  setTimeout(() => {
+    isLoading.value = false
+    successMsg.value = 'Sign up successful! Redirecting to login page in 3 seconds...'
+    setTimeout(() => {
+      router.push('/login')
+    }, 3000)
+  }, 1500)
+}
+
+function googleSignUp() {
+  window.alert('Google sign up is not available yet.')
 }
 </script>
 
@@ -152,6 +191,11 @@ const submit = () => {
   transition: background-color 0.2s;
 }
 
+.pink-btn[disabled] {
+  background-color: #f7a7c4;
+  cursor: not-allowed;
+}
+
 .pink-btn:hover {
   background-color: #e14a82;
 }
@@ -188,5 +232,17 @@ const submit = () => {
 .google-btn img {
   width: 20px;
   height: 20px;
+}
+
+.error-msg {
+  color: #e14a82;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.success-msg {
+  color: #2ecc40;
+  font-size: 14px;
+  margin-top: 12px;
+  text-align: center;
 }
 </style>

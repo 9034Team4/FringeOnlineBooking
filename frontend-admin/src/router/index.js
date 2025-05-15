@@ -17,6 +17,11 @@ const routes = [
     component: () => import('@/views/RegisterPage.vue')
   },
   {
+    path: '/home',
+    name: 'home',
+    component: () => import('@/views/HomePage.vue')
+  },
+  {
     path: '/',
     component: () => import('@/components/AppLayout.vue'),
     children: [

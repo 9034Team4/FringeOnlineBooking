@@ -27,6 +27,7 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const navItems = [
+  { name: 'Home', to: '/home', icon: 'fas fa-home' },
   { name: 'Dashboard', to: '/dashboard', icon: 'fas fa-th-large' },
   { name: 'Events', to: '/events', icon: 'fas fa-calendar' },
   { name: 'Messages', to: '/msg', icon: 'fas fa-paper-plane' },

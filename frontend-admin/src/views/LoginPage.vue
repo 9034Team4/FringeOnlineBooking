@@ -8,23 +8,27 @@
       <form @submit.prevent="handleLogin">
         <label>
           YOUR EMAIL
-          <input type="email" v-model="email" placeholder="Enter your mail" required />
+          <input type="email" v-model="email" placeholder="Enter your email" required />
         </label>
 
         <label class="password-label">
           PASSWORD
-          <span class="forgot">Forgot your password?</span>
+          <span class="forgot" @click="showForgot = true">Forgot your password?</span>
           <input type="password" v-model="password" placeholder="Enter your password" required />
         </label>
 
-        <button type="submit" class="login-btn">Sign In</button>
+        <button type="submit" class="login-btn" :disabled="isLoading">
+          <span v-if="isLoading">Signing in...</span>
+          <span v-else>Sign In</span>
+        </button>
+        <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
       </form>
 
       <div class="or">Or</div>
 
-      <button class="google-btn">
+      <button class="google-btn" @click="googleLogin">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
-        Sign up with Google
+        Sign in with Google
       </button>
     </div>
 
@@ -33,6 +37,17 @@
       <h2>Hello Friend</h2>
       <p>To keep connected with us provide us with your information</p>
       <button class="signup-btn" @click="goToSignup">Signup</button>
+    </div>
+
+    <!-- Forgot password modal -->
+    <div v-if="showForgot" class="modal-mask">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+          <h3>Forgot Password</h3>
+          <p>Please contact the administrator to reset your password.</p>
+          <button @click="showForgot = false" class="close-btn">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -44,13 +59,35 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const errorMsg = ref('')
+const isLoading = ref(false)
+const showForgot = ref(false)
 
 function handleLogin() {
-  // Fake login logic
-  if (email.value && password.value) {
-    localStorage.setItem('token', 'mock_token')
-    router.push('/dashboard')
+  errorMsg.value = ''
+  if (!email.value) {
+    errorMsg.value = 'Email is required.'
+    return
   }
+  if (!password.value) {
+    errorMsg.value = 'Password is required.'
+    return
+  }
+  isLoading.value = true
+  setTimeout(() => {
+    isLoading.value = false
+    // TODO: Call backend API
+    if (email.value === 'test@test.com' && password.value === '123456') {
+      localStorage.setItem('token', 'mock_token')
+      router.push('/dashboard')
+    } else {
+      errorMsg.value = 'Incorrect email or password.'
+    }
+  }, 1000)
+}
+
+function googleLogin() {
+  window.alert('Google sign in is not available yet.')
 }
 
 function goToSignup() {
@@ -128,6 +165,10 @@ input {
   cursor: pointer;
   width: 100%;
 }
+.login-btn[disabled] {
+  background: #f7a7c4;
+  cursor: not-allowed;
+}
 
 .or {
   text-align: center;
@@ -188,6 +229,46 @@ input {
   padding: 10px 20px;
   border-radius: 6px;
   border: none;
+  cursor: pointer;
+}
+
+.error-msg {
+  color: #e14a82;
+  font-size: 13px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+/* Forgot password modal styles */
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-wrapper {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.33);
+}
+.modal-container {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 8px;
+  text-align: center;
+}
+.close-btn {
+  margin-top: 20px;
+  background: #f25c94;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 24px;
   cursor: pointer;
 }
 </style>
