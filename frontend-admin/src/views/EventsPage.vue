@@ -1,14 +1,5 @@
 <template>
   <div class="events-page">
-    <!-- Banner Section -->
-    <div class="banner-section">
-      <div class="banner-header">
-        <span>Banner</span>
-        <button class="change-banner-btn" @click="changeBanner">Change Banner</button>
-      </div>
-      <img class="banner-img" src="@/assets/images/banner.png" alt="Banner" />
-    </div>
-
     <!-- Event Management Section -->
     <div class="event-mgmt-header">
       <h2>Event Management</h2>
@@ -17,36 +8,27 @@
       </div>
     </div>
     <div class="event-cards">
-      <div v-for="event in filteredEvents" :key="event.id" class="event-card">
-        <div class="card-img-wrapper">
-          <img :src="event.img" class="event-img" alt="event" />
-          <button class="fav-btn" @click="toggleFav(event)"><i :class="event.fav ? 'fas fa-heart' : 'far fa-heart'"></i></button>
-        </div>
-        <div class="card-content">
-          <div class="event-title">{{ event.title }}</div>
-          <div class="event-author">By {{ event.author }}</div>
-          <div class="avatars">
-            <template v-for="(avatar, idx) in event.avatars.slice(0, 4)" :key="idx">
-              <img :src="avatar" class="avatar" />
-            </template>
-            <span v-if="event.avatars.length > 4" class="more-avatar">+{{ event.avatars.length - 4 }}</span>
+      <div v-for="(event, idx) in pagedEvents" :key="idx" class="event-card">
+        <template v-if="event">
+          <div class="card-img-wrapper">
+            <img :src="event.img" class="event-img" alt="event" />
+            <button class="fav-btn" @click="toggleFav(event)"><i :class="event.fav ? 'fas fa-heart' : 'far fa-heart'"></i></button>
           </div>
-          <div class="card-actions">
-            <span class="current-data">Current Data</span>
-            <button class="delete-btn" @click="deleteEvent(event)">Delete</button>
+          <div class="card-content">
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-author">By {{ event.author }}</div>
+            <div class="avatars">
+              <template v-for="(avatar, idx) in event.avatars.slice(0, 4)" :key="idx">
+                <img :src="avatar" class="avatar" />
+              </template>
+              <span v-if="event.avatars.length > 4" class="more-avatar">+{{ event.avatars.length - 4 }}</span>
+            </div>
+            <div class="card-actions">
+              <span class="current-data">Current Data</span>
+              <button class="delete-btn" @click="deleteEvent(event)">Delete</button>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Change Banner Modal -->
-    <div v-if="showBannerModal" class="modal-mask">
-      <div class="modal-wrapper">
-        <div class="modal-container">
-          <h3>Change Banner</h3>
-          <p>This is a static demo. Banner upload is not available.</p>
-          <button class="close-btn" @click="showBannerModal = false">Close</button>
-        </div>
+        </template>
       </div>
     </div>
     <!-- Delete Modal -->
@@ -60,13 +42,18 @@
         </div>
       </div>
     </div>
+    <!-- 分页按钮 -->
+    <div class="pagination">
+      <button :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">Prev</button>
+      <button v-for="page in pageCount" :key="page" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
+      <button :disabled="currentPage === pageCount" @click="goToPage(currentPage + 1)">Next</button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 
-const showBannerModal = ref(false)
 const showDeleteModal = ref(false)
 const deleteTarget = ref(null)
 
@@ -86,61 +73,87 @@ const events = ref([
       'https://randomuser.me/api/portraits/women/44.jpg',
       'https://randomuser.me/api/portraits/men/45.jpg',
       'https://randomuser.me/api/portraits/women/46.jpg',
-      'https://randomuser.me/api/portraits/men/47.jpg'
     ]
   },
   {
     id: 2,
-    title: 'Abstract Colors',
-    author: 'Esthera Jackson',
-    img: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    title: 'Jazz Night',
+    author: 'Miles Davis',
+    img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
     category: 'Music',
     fav: true,
     avatars: [
-      'https://randomuser.me/api/portraits/men/32.jpg',
-      'https://randomuser.me/api/portraits/women/44.jpg',
-      'https://randomuser.me/api/portraits/men/45.jpg',
-      'https://randomuser.me/api/portraits/women/46.jpg'
+      'https://randomuser.me/api/portraits/men/50.jpg',
+      'https://randomuser.me/api/portraits/women/51.jpg',
+      'https://randomuser.me/api/portraits/men/52.jpg',
     ]
   },
   {
     id: 3,
-    title: 'Abstract Colors',
-    author: 'Esthera Jackson',
-    img: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    title: 'Cultural Parade',
+    author: 'Li Wei',
+    img: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80',
     category: 'Cultural',
     fav: false,
     avatars: [
-      'https://randomuser.me/api/portraits/men/32.jpg',
-      'https://randomuser.me/api/portraits/women/44.jpg',
-      'https://randomuser.me/api/portraits/men/45.jpg',
-      'https://randomuser.me/api/portraits/women/46.jpg',
-      'https://randomuser.me/api/portraits/men/47.jpg',
-      'https://randomuser.me/api/portraits/women/48.jpg'
+      'https://randomuser.me/api/portraits/women/60.jpg',
+      'https://randomuser.me/api/portraits/men/61.jpg',
     ]
   },
   {
     id: 4,
-    title: 'Abstract Colors',
-    author: 'Esthera Jackson',
-    img: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    title: 'Soccer Finals',
+    author: 'Alex Morgan',
+    img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=400&q=80',
     category: 'Sports',
     fav: false,
     avatars: [
-      'https://randomuser.me/api/portraits/men/32.jpg',
-      'https://randomuser.me/api/portraits/women/44.jpg',
-      'https://randomuser.me/api/portraits/men/45.jpg',
-      'https://randomuser.me/api/portraits/women/46.jpg'
+      'https://randomuser.me/api/portraits/men/70.jpg',
+      'https://randomuser.me/api/portraits/women/71.jpg',
+      'https://randomuser.me/api/portraits/men/72.jpg',
+    ]
+  },
+  {
+    id: 5,
+    title: 'Tech Expo 2025',
+    author: 'Sundar Pichai',
+    img: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    category: 'Technical',
+    fav: true,
+    avatars: [
+      'https://randomuser.me/api/portraits/men/80.jpg',
+      'https://randomuser.me/api/portraits/women/81.jpg',
+    ]
+  },
+  {
+    id: 6,
+    title: 'Street Art Festival',
+    author: 'Banksy',
+    img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
+    category: 'Cultural',
+    fav: false,
+    avatars: [
+      'https://randomuser.me/api/portraits/men/90.jpg',
+      'https://randomuser.me/api/portraits/women/91.jpg',
+      'https://randomuser.me/api/portraits/men/92.jpg',
     ]
   }
 ])
 
+const pageSize = 6
+const currentPage = ref(1)
 const filteredEvents = computed(() => {
   return events.value.filter(e => e.category === selectedCategory.value)
 })
-
-function changeBanner() {
-  showBannerModal.value = true
+const pageCount = computed(() => Math.ceil(filteredEvents.value.length / pageSize))
+const pagedEvents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredEvents.value.slice(start, start + pageSize)
+})
+function goToPage(page) {
+  if (page >= 1 && page <= pageCount.value) {
+    currentPage.value = page
+  }
 }
 function toggleFav(event) {
   event.fav = !event.fav
@@ -156,51 +169,17 @@ function confirmDelete() {
 
 <style scoped>
 .events-page {
-  padding: 40px 0 0 0;
+  padding: 16px 0 0 0;
   background: #f8f8fa;
   min-height: 100vh;
   font-family: 'ABeeZee', sans-serif;
-}
-.banner-section {
-  background: #fff;
-  border-radius: 18px;
-  padding: 32px 40px 32px 40px;
-  margin: 0 auto 36px auto;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-  max-width: 900px;
-}
-.banner-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-  font-size: 20px;
-  font-weight: bold;
-}
-.change-banner-btn {
-  background: #f25c94;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 32px;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(242,92,148,0.08);
-}
-.banner-img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 .event-mgmt-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   max-width: 1200px;
-  margin: 0 auto 18px auto;
+  margin: 0 auto 10px auto;
   padding: 0 20px;
 }
 .event-mgmt-header h2 {
@@ -227,23 +206,28 @@ function confirmDelete() {
   border-bottom: 2px solid #7c4dff;
 }
 .event-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 40px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px 28px;
+  margin: 0;
+  padding: 0 0 24px 40px;
+  min-height: 220px;
+  align-items: flex-start;
 }
 .event-card {
   background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-bottom: 18px;
+  padding-bottom: 12px;
   position: relative;
   transition: box-shadow 0.2s;
+  min-width: 0;
+  width: 300px;
+  max-width: 300px;
+  margin: 0;
 }
 .event-card:hover {
   box-shadow: 0 8px 32px rgba(242,92,148,0.12);
@@ -253,9 +237,9 @@ function confirmDelete() {
 }
 .event-img {
   width: 100%;
-  height: 180px;
+  height: 110px;
   object-fit: cover;
-  border-radius: 24px 24px 0 0;
+  border-radius: 18px 18px 0 0;
 }
 .fav-btn {
   position: absolute;
@@ -378,5 +362,23 @@ function confirmDelete() {
   font-size: 15px;
   cursor: pointer;
   margin-left: 16px;
+}
+.pagination {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 24px 0 0 0;
+}
+.pagination button {
+  border: none;
+  background: #f0f0f0;
+  color: #333;
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.pagination .active {
+  background: #16c2b8;
+  color: white;
 }
 </style>

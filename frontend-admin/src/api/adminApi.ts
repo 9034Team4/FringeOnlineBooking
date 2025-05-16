@@ -1,5 +1,4 @@
 import axiosInstance from './axiosInstance';
-import { AxiosResponse } from 'axios';
 
 // --- Admin Auth ---
 export const adminAuth = {
@@ -23,7 +22,7 @@ export const adminEvents = {
 
 // --- Admin Dashboard ---
 export const adminDashboard = {
-  stats: (): Promise<AxiosResponse<any>> =>
+  stats: () =>
     axiosInstance.get('/admin/dashboard-stats'),
 };
 

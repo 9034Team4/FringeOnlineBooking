@@ -2,7 +2,7 @@
   <header class="topbar">
     <!-- Optional Title -->
     <div class="topbar-left">
-      <h2 class="page-title">Dashboard</h2>
+      <h2 v-if="isDashboard" class="page-title">Dashboard</h2>
     </div>
 
     <!-- Right Section: Avatar -->
@@ -14,7 +14,9 @@
 </template>
 
 <script setup>
-// You can later fetch user data or page title from props or store
+import { useRoute } from 'vue-router'
+const route = useRoute()
+const isDashboard = route.path === '/dashboard'
 </script>
 
 <style scoped>

@@ -63,10 +63,10 @@ const input = ref('')
 .messages-layout {
   display: flex;
   height: 80vh;
-  background: #fafafd;
-  border-radius: 18px;
+  background: #fff;
+  border-radius: 24px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-  margin: 40px auto 0 auto;
+  margin: 0 0 0 0;
   max-width: 1100px;
   min-width: 900px;
   overflow: hidden;
@@ -78,18 +78,19 @@ const input = ref('')
   display: flex;
   flex-direction: column;
   padding: 24px 0;
-  gap: 8px;
+  gap: 6px;
 }
 .contact-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
-  border-radius: 12px;
+  padding: 18px 24px;
+  border-radius: 14px;
   cursor: pointer;
   background: #fff;
   transition: background 0.2s;
-  margin: 0 12px;
+  margin: 0 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 .contact-item.active {
   background: #f25c94;
@@ -161,12 +162,12 @@ const input = ref('')
   flex-direction: column;
   gap: 18px;
   background: #f8f8fa;
-  border-radius: 0 0 18px 18px;
+  border-radius: 0 0 24px 24px;
   overflow-y: auto;
 }
 .chat-bubble {
   max-width: 60%;
-  padding: 10px 18px;
+  padding: 12px 22px;
   border-radius: 18px;
   font-size: 15px;
   display: inline-block;
@@ -201,14 +202,14 @@ const input = ref('')
   align-items: center;
   padding: 18px 32px;
   border-top: 1px solid #e0e0e0;
-  background: #fafafd;
-  border-radius: 0 0 18px 18px;
+  background: #fff;
+  border-radius: 0 0 24px 24px;
 }
 .chat-input {
   flex: 1;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 18px;
+  border: 1.5px solid #f25c94;
+  border-radius: 14px;
+  padding: 14px 20px;
   font-size: 15px;
   background: #fff;
   margin-right: 16px;
