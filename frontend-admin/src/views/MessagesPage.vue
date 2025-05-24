@@ -17,46 +17,88 @@
           <div class="chat-contact-name">{{ currentContact.name }}</div>
           <div class="chat-status">Online</div>
         </div>
-        <button class="chat-menu"><i class="fas fa-ellipsis-v"></i></button>
       </div>
-      <div class="chat-body">
+      <div class="chat-body" ref="chatBodyRef">
         <div v-for="(msg, idx) in messages" :key="idx" :class="['chat-bubble', msg.fromMe ? 'me' : 'other']">
           <span class="bubble-content">{{ msg.text }}</span>
-          <span class="bubble-time">00:08</span>
+          <span class="bubble-time">{{ msg.time }}</span>
         </div>
       </div>
       <div class="chat-input-bar">
-        <input v-model="input" class="chat-input" placeholder="Can I help You?" />
-        <button class="send-btn"><i class="fas fa-paper-plane"></i></button>
+        <input v-model="input" class="chat-input" placeholder="Can I help You?" @keyup.enter="sendMessage" />
+        <button class="send-btn" @click="sendMessage"><i class="fas fa-paper-plane"></i></button>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const contacts = [
-  { id: 1, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', summary: 'Non in semper nisi adipiscing s...' },
-  { id: 2, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', summary: 'Non in semper nisi adipiscing s...' },
-  { id: 3, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/men/45.jpg', summary: 'Non in semper nisi adipiscing s...' },
-  { id: 4, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/men/46.jpg', summary: 'Non in semper nisi adipiscing s...' },
-  { id: 5, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/women/47.jpg', summary: 'Non in semper nisi adipiscing s...' },
-  { id: 6, name: 'Contact Name', avatar: 'https://randomuser.me/api/portraits/men/48.jpg', summary: 'Non in semper nisi adipiscing s...' },
+  { id: 1, name: 'Alice Smith', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', summary: 'Let\'s catch up soon!' },
+  { id: 2, name: 'Bob Johnson', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', summary: 'Project update needed.' },
+  { id: 3, name: 'Charlie Lee', avatar: 'https://randomuser.me/api/portraits/men/45.jpg', summary: 'Lunch this Friday?' },
+  { id: 4, name: 'Diana King', avatar: 'https://randomuser.me/api/portraits/women/47.jpg', summary: 'Sent you the files.' },
+  { id: 5, name: 'Ethan Brown', avatar: 'https://randomuser.me/api/portraits/men/48.jpg', summary: 'See you at the event.' },
+  { id: 6, name: 'Fiona White', avatar: 'https://randomuser.me/api/portraits/women/60.jpg', summary: 'Let\'s review the plan.' },
 ]
 const selectedContact = ref(0)
 const currentContact = computed(() => contacts[selectedContact.value])
 
-const messages = [
-  { text: 'Hello!', fromMe: false },
-  { text: 'Hi', fromMe: true },
-  { text: "How're you doing?", fromMe: false },
-  { text: "I'm fine, and you?", fromMe: true },
-  { text: "I'm cool too! Let's go camping tomorrow? Everybody will be there!", fromMe: false },
-  { text: "That's would be nice!", fromMe: true },
-  { text: "I'm in.", fromMe: true },
-]
+const allMessages = ref({
+  1: [
+    { text: 'Hi Alice! How are you?', fromMe: true, time: '09:01' },
+    { text: 'Hey! I\'m good, thanks. You?', fromMe: false, time: '09:02' },
+    { text: 'Doing well! Want to catch up this weekend?', fromMe: true, time: '09:03' },
+    { text: 'Sure, let\'s do it!', fromMe: false, time: '09:04' },
+  ],
+  2: [
+    { text: 'Bob, do you have the latest project update?', fromMe: true, time: '10:10' },
+    { text: 'Yes, I\'ll send it over soon.', fromMe: false, time: '10:11' },
+    { text: 'Thanks!', fromMe: true, time: '10:12' },
+  ],
+  3: [
+    { text: 'Charlie, are you free for lunch this Friday?', fromMe: true, time: '11:20' },
+    { text: 'Yes! Where shall we go?', fromMe: false, time: '11:21' },
+    { text: 'How about the new Italian place?', fromMe: true, time: '11:22' },
+    { text: 'Sounds great!', fromMe: false, time: '11:23' },
+  ],
+  4: [
+    { text: 'Diana, did you get the files I sent?', fromMe: true, time: '13:00' },
+    { text: 'Yes, received. Will review today.', fromMe: false, time: '13:01' },
+    { text: 'Thanks!', fromMe: true, time: '13:02' },
+  ],
+  5: [
+    { text: 'Ethan, are you coming to the event tonight?', fromMe: true, time: '15:10' },
+    { text: 'Of course! See you there.', fromMe: false, time: '15:11' },
+  ],
+  6: [
+    { text: 'Fiona, let\'s review the plan tomorrow.', fromMe: true, time: '16:30' },
+    { text: 'Sure, what time?', fromMe: false, time: '16:31' },
+    { text: '10am works for me.', fromMe: true, time: '16:32' },
+    { text: 'Perfect, see you then!', fromMe: false, time: '16:33' },
+  ],
+})
 const input = ref('')
+const chatBodyRef = ref(null)
+
+const messages = computed(() => allMessages.value[contacts[selectedContact.value].id])
+
+function sendMessage() {
+  const text = input.value.trim()
+  if (!text) return
+  const now = new Date()
+  const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
+  const id = contacts[selectedContact.value].id
+  allMessages.value[id].push({ text, fromMe: true, time })
+  input.value = ''
+  nextTick(() => {
+    if (chatBodyRef.value) {
+      chatBodyRef.value.scrollTop = chatBodyRef.value.scrollHeight
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -147,13 +189,6 @@ const input = ref('')
 .chat-status {
   font-size: 13px;
   color: #4caf50;
-}
-.chat-menu {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #888;
-  cursor: pointer;
 }
 .chat-body {
   flex: 1;

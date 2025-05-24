@@ -28,7 +28,14 @@
             <td>{{ staff.email }}</td>
             <td>{{ staff.group }}</td>
             <td>{{ staff.event }}</td>
-            <td><span class="status onsite">On site</span></td>
+            <td>
+              <span
+                class="status"
+                :class="staff.status === 'Active' ? 'onsite' : 'inactive'"
+              >
+                {{ staff.status === 'Active' ? 'On site' : 'Inactive' }}
+              </span>
+            </td>
             <td>
               <button class="op-btn edit" @click="openEditModal(staff)">edit</button>
               <button class="op-btn delete" @click="openDeleteModal(staff)">Delete</button>
@@ -48,7 +55,7 @@
     <!-- Add/Edit Modal -->
     <div v-if="showModal" class="modal-mask">
       <div class="modal-wrapper">
-        <div class="modal-container">
+        <div class="modal-container" ref="modalContainerRef" @keydown="handleModalKeydown" tabindex="0">
           <h3>{{ modalType === 'add' ? 'Add Staff' : 'Edit Staff' }}</h3>
           <input v-model="modalStaff.name" placeholder="Name" class="modal-input" />
           <input v-model="modalStaff.email" placeholder="Email" class="modal-input" />
@@ -61,6 +68,7 @@
             <option>Active</option>
             <option>Inactive</option>
           </select>
+          <div v-if="formError" class="form-error">{{ formError }}</div>
           <div class="modal-actions">
             <button class="save-btn" @click="saveStaff">Save</button>
             <button class="close-btn" @click="closeModal">Cancel</button>
@@ -72,7 +80,7 @@
     <!-- Delete Modal -->
     <div v-if="showDeleteModal" class="modal-mask">
       <div class="modal-wrapper">
-        <div class="modal-container">
+        <div class="modal-container" ref="deleteModalRef" @keydown="handleDeleteModalKeydown" tabindex="0">
           <h3>Delete Staff</h3>
           <p>Are you sure you want to delete <b>{{ modalStaff.name }}</b>?</p>
           <div class="modal-actions">
@@ -86,44 +94,45 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const search = ref('')
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const modalType = ref('add') // 'add' or 'edit'
 const modalStaff = ref({ id: null, name: '', email: '', role: 'Staff', status: 'Active' })
+const formError = ref('')
 const staffList = ref([
-  { id: '00001', name: 'Alice Smith', email: 'alice@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
-  { id: '00002', name: 'Bob Johnson', email: 'bob@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00003', name: 'Charlie Lee', email: 'charlie@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00004', name: 'Diana King', email: 'diana@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00005', name: 'Ethan Brown', email: 'ethan@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00006', name: 'Fiona White', email: 'fiona@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00007', name: 'George Black', email: 'george@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
-  { id: '00008', name: 'Hannah Green', email: 'hannah@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00009', name: 'Ian Blue', email: 'ian@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00010', name: 'Jane Red', email: 'jane@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00011', name: 'Kevin Gray', email: 'kevin@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00012', name: 'Linda Pink', email: 'linda@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00013', name: 'Mike Yellow', email: 'mike@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
-  { id: '00014', name: 'Nina Purple', email: 'nina@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00015', name: 'Oscar Gold', email: 'oscar@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00016', name: 'Paula Silver', email: 'paula@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00017', name: 'Quinn Bronze', email: 'quinn@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00018', name: 'Rachel Copper', email: 'rachel@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00019', name: 'Sam Jade', email: 'sam@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
-  { id: '00020', name: 'Tina Ruby', email: 'tina@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00021', name: 'Uma Emerald', email: 'uma@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00022', name: 'Victor Sapphire', email: 'victor@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00023', name: 'Wendy Topaz', email: 'wendy@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
-  { id: '00024', name: 'Xander Pearl', email: 'xander@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00025', name: 'Yara Opal', email: 'yara@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00026', name: 'Zane Quartz', email: 'zane@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00027', name: 'Amy Amber', email: 'amy@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00028', name: 'Brian Garnet', email: 'brian@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
-  { id: '00029', name: 'Cathy Jade', email: 'cathy@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
-  { id: '00030', name: 'David Onyx', email: 'david@example.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00001', name: 'Alice Smith', email: 'alice.smith@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00002', name: 'Bob Johnson', email: 'bobjohnson@yahoo.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00003', name: 'Charlie Lee', email: 'charlielee@outlook.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00004', name: 'Diana King', email: 'diana.king@163.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00005', name: 'Ethan Brown', email: 'ethan.brown@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00006', name: 'Fiona White', email: 'fiona.white@hotmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00007', name: 'George Black', email: 'george.black@protonmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00008', name: 'Hannah Green', email: 'hannah.green@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00009', name: 'Ian Blue', email: 'ian.blue@yahoo.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00010', name: 'Jane Red', email: 'jane.red@outlook.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00011', name: 'Kevin Gray', email: 'kevin.gray@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00012', name: 'Linda Pink', email: 'linda.pink@icloud.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00013', name: 'Mike Yellow', email: 'mike.yellow@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00014', name: 'Nina Purple', email: 'nina.purple@163.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00015', name: 'Oscar Gold', email: 'oscar.gold@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00016', name: 'Paula Silver', email: 'paula.silver@outlook.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00017', name: 'Quinn Bronze', email: 'quinn.bronze@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00018', name: 'Rachel Copper', email: 'rachel.copper@yahoo.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00019', name: 'Sam Jade', email: 'sam.jade@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00020', name: 'Tina Ruby', email: 'tina.ruby@protonmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00021', name: 'Uma Emerald', email: 'uma.emerald@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00022', name: 'Victor Sapphire', email: 'victor.sapphire@outlook.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00023', name: 'Wendy Topaz', email: 'wendy.topaz@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
+  { id: '00024', name: 'Xander Pearl', email: 'xander.pearl@yahoo.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00025', name: 'Yara Opal', email: 'yara.opal@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00026', name: 'Zane Quartz', email: 'zane.quartz@163.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00027', name: 'Amy Amber', email: 'amy.amber@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00028', name: 'Brian Garnet', email: 'brian.garnet@outlook.com', group: 'Expert group', event: 'Thick and Thin', role: 'Manager', status: 'Inactive' },
+  { id: '00029', name: 'Cathy Jade', email: 'cathy.jade@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Staff', status: 'Active' },
+  { id: '00030', name: 'David Onyx', email: 'david.onyx@gmail.com', group: 'Expert group', event: 'Thick and Thin', role: 'Admin', status: 'Active' },
 ])
 
 const currentPage = ref(1)
@@ -139,37 +148,117 @@ const filteredStaff = computed(() => {
   return staffList.value.filter(s => s.name.toLowerCase().includes(search.value.toLowerCase()))
 })
 
+const modalContainerRef = ref(null)
+const deleteModalRef = ref(null)
+
 function openAddModal() {
   modalType.value = 'add'
   modalStaff.value = { id: null, name: '', email: '', role: 'Staff', status: 'Active' }
   showModal.value = true
+  nextTick(() => {
+    modalContainerRef.value && modalContainerRef.value.focus()
+  })
 }
 function openEditModal(staff) {
   modalType.value = 'edit'
   modalStaff.value = { ...staff }
   showModal.value = true
+  nextTick(() => {
+    modalContainerRef.value && modalContainerRef.value.focus()
+  })
 }
 function closeModal() {
-  showModal.value = false
+  showModal.value = false;
+  formError.value = '';
 }
 function saveStaff() {
-  // Static: just close modal, no real save
-  showModal.value = false
+  // 校验必填
+  if (!modalStaff.value.name.trim() || !modalStaff.value.email.trim()) {
+    formError.value = 'Name and Email are required.';
+    return;
+  }
+  // 校验邮箱格式
+  const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!emailPattern.test(modalStaff.value.email)) {
+    formError.value = 'Please enter a valid email address.';
+    return;
+  }
+  // 校验邮箱唯一
+  const emailExists = staffList.value.some(
+    s =>
+      s.email.toLowerCase() === modalStaff.value.email.trim().toLowerCase() &&
+      (modalType.value === 'add' || s.id !== modalStaff.value.id)
+  );
+  if (emailExists) {
+    formError.value = 'This email is already used by another staff member.';
+    return;
+  }
+
+  // 通过校验，清空错误
+  formError.value = '';
+
+  if (modalType.value === 'add') {
+    const maxId = staffList.value.length
+      ? Math.max(...staffList.value.map(s => Number(s.id)))
+      : 0;
+    const newStaff = {
+      ...modalStaff.value,
+      id: String(maxId + 1).padStart(5, '0'),
+      group: 'Expert group',
+      event: 'Thick and Thin',
+    };
+    staffList.value.unshift(newStaff);
+    currentPage.value = 1;
+  } else {
+    // 编辑逻辑
+    const idx = staffList.value.findIndex(s => s.id === modalStaff.value.id);
+    if (idx !== -1) {
+      // 只更新可编辑字段
+      staffList.value[idx] = {
+        ...staffList.value[idx],
+        name: modalStaff.value.name,
+        email: modalStaff.value.email,
+        role: modalStaff.value.role,
+        status: modalStaff.value.status,
+      };
+    }
+  }
+  showModal.value = false;
 }
 function openDeleteModal(staff) {
   modalStaff.value = { ...staff }
   showDeleteModal.value = true
+  nextTick(() => {
+    deleteModalRef.value && deleteModalRef.value.focus()
+  })
 }
 function closeDeleteModal() {
   showDeleteModal.value = false
 }
 function confirmDelete() {
-  // Static: just close modal, no real delete
-  showDeleteModal.value = false
+  const idx = staffList.value.findIndex(s => s.id === modalStaff.value.id);
+  if (idx !== -1) {
+    staffList.value.splice(idx, 1);
+  }
+  showDeleteModal.value = false;
 }
 function goToPage(page) {
   if (page >= 1 && page <= pageCount.value) {
     currentPage.value = page
+  }
+}
+function handleModalKeydown(e) {
+  if (e.key === 'Enter') {
+    saveStaff();
+  } else if (e.key === 'Escape') {
+    closeModal();
+  }
+}
+function handleDeleteModalKeydown(e) {
+  if (e.key === 'Enter') {
+    confirmDelete();
+  } else if (e.key === 'Escape') {
+    closeDeleteModal();
   }
 }
 </script>
@@ -235,6 +324,15 @@ function goToPage(page) {
 .status.onsite {
   background: #c8f2e0;
   color: #2e7d5a;
+  border-radius: 12px;
+  padding: 4px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-block;
+}
+.status.inactive {
+  background: #ffeaea;
+  color: #e14a82;
   border-radius: 12px;
   padding: 4px 18px;
   font-size: 14px;
@@ -336,5 +434,10 @@ function goToPage(page) {
 .close-btn {
   background: #f0f0f0;
   color: #333;
+}
+.form-error {
+  color: #e14a82;
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 </style>

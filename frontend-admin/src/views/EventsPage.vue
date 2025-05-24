@@ -34,7 +34,7 @@
     <!-- Delete Modal -->
     <div v-if="showDeleteModal" class="modal-mask">
       <div class="modal-wrapper">
-        <div class="modal-container">
+        <div class="modal-container" ref="deleteModalRef" @keydown="handleDeleteModalKeydown" tabindex="0">
           <h3>Delete Event</h3>
           <p>Are you sure you want to delete <b>{{ deleteTarget?.title }}</b>?</p>
           <button class="delete-btn" @click="confirmDelete">Delete</button>
@@ -52,10 +52,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const showDeleteModal = ref(false)
 const deleteTarget = ref(null)
+const deleteModalRef = ref(null)
 
 const categories = ['Technical', 'Music', 'Cultural', 'Sports']
 const selectedCategory = ref('Technical')
@@ -161,9 +162,25 @@ function toggleFav(event) {
 function deleteEvent(event) {
   deleteTarget.value = event
   showDeleteModal.value = true
+  nextTick(() => {
+    deleteModalRef.value && deleteModalRef.value.focus()
+  })
 }
 function confirmDelete() {
+  if (deleteTarget.value) {
+    const idx = events.value.findIndex(e => e.id === deleteTarget.value.id)
+    if (idx !== -1) {
+      events.value.splice(idx, 1)
+    }
+  }
   showDeleteModal.value = false
+}
+function handleDeleteModalKeydown(e) {
+  if (e.key === 'Enter') {
+    confirmDelete();
+  } else if (e.key === 'Escape') {
+    showDeleteModal.value = false;
+  }
 }
 </script>
 
