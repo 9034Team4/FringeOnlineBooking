@@ -1,4 +1,4 @@
-import { AppDataSource } from '../config/db';
+import { AppDataSource } from '../config/data-source';
 import { Event, EventStatus } from '../entities/Event';
 import { User, UserRole } from '../entities/User';
 import { Repository } from 'typeorm';

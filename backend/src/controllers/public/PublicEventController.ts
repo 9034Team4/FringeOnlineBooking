@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { eventQuerySchema } from '../../schemas/event';
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { Event, EventStatus } from '../../entities/Event';
 
 const eventRepo = AppDataSource.getRepository(Event);

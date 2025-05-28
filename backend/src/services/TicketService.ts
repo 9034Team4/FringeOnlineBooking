@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { Ticket, TicketType, TicketStatus } from '../entities/Ticket';
 import { Event } from '../entities/Event';
 import { User } from '../entities/User';
-import { AppDataSource } from '../config/db';
+import { AppDataSource } from '../config/data-source';
 import { v4 as uuidv4 } from 'uuid';
 import * as QRCode from 'qrcode';
 

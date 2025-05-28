@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import router from './routes';
 import { swaggerUi, swaggerSpec } from './swagger';
-import { AppDataSource } from './config/db';
+import { AppDataSource } from './config/data-source';
 import { connectRedis, redisClient } from './config/redis';
 import path from 'path';
 import mime from 'mime';

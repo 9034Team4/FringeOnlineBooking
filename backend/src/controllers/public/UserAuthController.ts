@@ -1,4 +1,4 @@
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { User, UserRole } from '../../entities/User';
 import bcryptjs from 'bcryptjs';
 import { Request, Response } from 'express';
@@ -14,63 +14,90 @@ import {
 
 const userRepo = AppDataSource.getRepository(User);
 
+// 简单的密码强度验证
+const isPasswordStrong = (password: string): boolean => {
+  // 至少8个字符，包含数字和字母
+  return password.length >= 8 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
+};
+
 export const UserAuthController = {
   /**
    * Register a new user
    */
   async register(req: Request, res: Response) {
     try {
-      const validatedData = userRegisterSchema.parse(req.body);
-      const { email, password, firstName, lastName, name } = validatedData;
+      const { email, password } = req.body;
 
-      // Check if user already exists
+      // 基本输入验证
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email and password are required'
+        });
+      }
+
+      // 验证邮箱格式
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+      }
+
+      // 验证密码强度
+      if (!isPasswordStrong(password)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 8 characters long and contain both letters and numbers'
+        });
+      }
+
+      // 检查邮箱是否已存在
       const existingUser = await userRepo.findOne({ where: { email } });
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: 'User with this email already exists'
+          message: 'Email already registered'
         });
       }
 
-      // Hash password
+      // 加密密码
       const hashedPassword = await bcryptjs.hash(password, 10);
 
-      // Create new user
+      // 创建新用户
       const user = userRepo.create({
         email,
         password: hashedPassword,
-        firstName,
-        lastName,
-        name: name || `${firstName} ${lastName}`,
+        name: email.split('@')[0], // 使用邮箱前缀作为默认名称
         role: UserRole.USER,
-        isVerified: false
+        isVerified: true // 简化流程，默认已验证
       });
 
       await userRepo.save(user);
 
-      // Generate verification token
-      const verificationToken = generateToken({ userId: user.id });
-
-      // TODO: Send verification email
+      // 生成 JWT token
+      const token = generateToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      });
 
       return res.status(201).json({
         success: true,
-        message: 'User registered successfully. Please verify your email.',
+        message: 'Registration successful',
         data: {
-          userId: user.id,
-          email: user.email,
-          name: user.name
+          token,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+          }
         }
       });
     } catch (err: unknown) {
       console.error('Error registering user:', err);
-      if (err instanceof ZodError) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid input data',
-          error: err.message
-        });
-      }
       return res.status(500).json({
         success: false,
         message: 'Failed to register user',
@@ -84,43 +111,42 @@ export const UserAuthController = {
    */
   async login(req: Request, res: Response) {
     try {
-      const validatedData = userLoginSchema.parse(req.body);
-      const { email, password } = validatedData;
+      const { email, password } = req.body;
 
-      // Find user
+      // 基本输入验证
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email and password are required'
+        });
+      }
+
+      // 查找用户
       const user = await userRepo.findOne({ where: { email } });
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: 'Invalid email or password'
         });
       }
 
-      // Verify password
+      // 验证密码
       const isValidPassword = await bcryptjs.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: 'Invalid email or password'
         });
       }
 
-      // Check if email is verified
-      if (!user.isVerified) {
-        return res.status(403).json({
-          success: false,
-          message: 'Please verify your email before logging in'
-        });
-      }
-
-      // Generate JWT token
+      // 生成 JWT token
       const token = generateToken({
         userId: user.id,
         email: user.email,
         role: user.role
       });
 
-      // Update last login
+      // 更新最后登录时间
       user.lastLogin = new Date();
       await userRepo.save(user);
 
@@ -139,13 +165,6 @@ export const UserAuthController = {
       });
     } catch (err: unknown) {
       console.error('Error logging in:', err);
-      if (err instanceof ZodError) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid input data',
-          error: err.message
-        });
-      }
       return res.status(500).json({
         success: false,
         message: 'Failed to login',

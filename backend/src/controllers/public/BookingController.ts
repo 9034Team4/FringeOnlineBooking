@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { bookingCreateSchema, bookingCancelSchema, bookingQuerySchema } from '../../schemas/booking';
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { Booking, BookingStatus } from '../../entities/Booking';
 import { Event } from '../../entities/Event';
 import { Seat } from '../../entities/Seat';

@@ -1,4 +1,4 @@
-import { AppDataSource } from '../config/db';
+import { AppDataSource } from '../config/data-source';
 import { Booking, BookingStatus } from '../entities/Booking';
 import { Event } from '../entities/Event';
 import { User } from '../entities/User';

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { adminLoginSchema } from '../../schemas/admin';
 import { ZodError } from 'zod';
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { User, UserRole } from '../../entities/User';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../../utils/jwt';

@@ -4,7 +4,7 @@ import { Event, EventStatus } from '@entities/Event';
 import { User, UserRole } from '@entities/User';
 import { Ticket, TicketStatus, TicketType } from '@entities/Ticket';
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@config/db';
+import { AppDataSource } from '@config/data-source';
 
 jest.mock('typeorm');
 jest.mock('../../config/db');

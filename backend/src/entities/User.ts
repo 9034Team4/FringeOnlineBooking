@@ -50,12 +50,12 @@ export class User {
   avatar?: string;
 
   /** First name of the user */
-  @Column()
-  firstName!: string;
+  @Column({ nullable: true })
+  firstName?: string;
 
   /** Last name of the user */
-  @Column()
-  lastName!: string;
+  @Column({ nullable: true })
+  lastName?: string;
 
   /** Indicates if the user's email is verified */
   @Column({ default: false })

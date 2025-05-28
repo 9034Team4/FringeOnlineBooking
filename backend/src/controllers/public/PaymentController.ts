@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { paymentProcessSchema, paymentRefundSchema } from '../../schemas/payment';
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { Booking, BookingStatus } from '../../entities/Booking';
 import { Payment } from '../../entities/Payment';
 

@@ -5,10 +5,10 @@ import { User } from '@entities/User';
 import { Venue } from '@entities/Venue';
 import { EventCategory } from '@entities/EventCategory';
 import { Repository } from 'typeorm';
-import { AppDataSource } from '@config/db';
+import { AppDataSource } from '@config/data-source';
 
 jest.mock('typeorm');
-jest.mock('@config/db');
+jest.mock('@config/data-source');
 jest.mock('qrcode');
 
 describe('TicketService', () => {

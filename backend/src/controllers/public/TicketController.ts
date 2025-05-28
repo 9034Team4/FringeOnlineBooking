@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { AppDataSource } from '../../config/db';
+import { AppDataSource } from '../../config/data-source';
 import { Ticket, TicketStatus } from '../../entities/Ticket';
 import { Event } from '../../entities/Event';
 import { Seat } from '../../entities/Seat';

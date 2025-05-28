@@ -1,12 +1,16 @@
 import jwt from 'jsonwebtoken';
-import { jwtConfig } from '../config/jwt';
+import { authConfig } from '../config/auth';
 /*
   create token
 */
 export function generateToken(payload: object): string {
-  return jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: jwtConfig.expiresIn });
+  return jwt.sign(payload, authConfig.jwtSecret);
 }
 
 export function verifyToken(token: string): any {
-  return jwt.verify(token, process.env.JWT_SECRET as string);
+  try {
+    return jwt.verify(token, authConfig.jwtSecret);
+  } catch (error) {
+    throw new Error('Invalid token');
+  }
 }
