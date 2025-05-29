@@ -41,13 +41,14 @@ export default defineComponent({
     const router = useRouter()
 
     const goToEvent = () => {
-      router.push(`/no/${props.id}`)
+      router.push(`/events/${props.id}`) // ✅ 正确路径
     }
 
     return { goToEvent }
   }
 })
 </script>
+
 
 <style scoped>
 .event-card {

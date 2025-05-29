@@ -41,7 +41,28 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue')
+  },
+  {
+    path: '/auth',
+    name: 'Auth',
+    component: () => import('@/views/AuthPage.vue')
+  },
+  {
+    path: '/booking-confirmation',
+    name: 'BookingConfirmation',
+    component: () => import('@/views/BookingConfirmation.vue')
+  },
+  {
+    path: '/ticket',
+    name: 'Ticket',
+    component: () => import('../views/TicketView.vue')
+  },
+  {
+    path: '/venue',
+    name: 'VenueDetails',
+    component: () => import('@/views/VenueDetailsPage.vue')
   }
+
 ]
 
 const router = createRouter({

@@ -3,16 +3,13 @@
     <router-link to="/" class="logo">
       <img class="logo" src="@/assets/images/fringe.png" alt="Adelaide Fringe" />
     </router-link>
-    <!-- <img class="logo" src="@/assets/images/fringe.png" alt="Adelaide Fringe" /> -->
     <nav class="header-right">
       <a href="#">Accessibility</a>
-      <a href="#">Login</a>
-      <button class="signup-btn">Signup</button>
+      <router-link to="/auth" class="login-link">Login</router-link>
+      <router-link to="/auth" class="signup-btn">Sign Up</router-link>
     </nav>
   </header>
 </template>
-
-
 
 <style scoped>
 .header {
@@ -34,19 +31,20 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: auto; /* This pushes it to the right */
+  margin-left: auto;
 }
 
-.header-right a {
-  color: inherit;            /* Match parent text color */
-  text-decoration: none;     /* Remove underline */
+.header-right a,
+.header-right .login-link {
+  color: inherit;
+  text-decoration: none;
   cursor: pointer;
   user-select: none;
-
+  font-size: 16px;
 }
 
 .signup-btn {
-  background-color: #f25c94; /* or use your pink */
+  background-color: #f25c94;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -56,6 +54,11 @@
   cursor: pointer;
   font-size: 16px;
   user-select: none;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
 }
 
 .signup-btn:hover {
@@ -65,9 +68,5 @@
 .logo {
   height: 100%;
 }
-
-.partner-logo {
-  height: 24px;
-}
-
 </style>
+

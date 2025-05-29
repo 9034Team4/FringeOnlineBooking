@@ -1,371 +1,187 @@
 <template>
-  <div class="event-details-page">
-    <div v-if="loading" class="loading">
-      <i class="fas fa-spinner fa-spin"></i> Loading event details...
-    </div>
-
-    <div v-else-if="error" class="error">
-      <i class="fas fa-exclamation-triangle"></i> {{ error }}
-    </div>
-
-    <div v-else-if="event" class="event-container">
-      <div class="event-header">
-        <h1>{{ event.name }}</h1>
-        <div class="event-meta">
-          <span class="event-date">
-            <i class="fas fa-calendar-alt"></i>
-            {{ formatDate(event.date) }}
-          </span>
-          <span class="event-location">
-            <i class="fas fa-map-marker-alt"></i>
-            {{ event.location }}
-          </span>
-          <span class="event-category">
-            <i class="fas fa-tag"></i>
-            {{ event.category }}
-          </span>
+  <div class="event-details-container">
+    <div class="event-header">
+      <img src="@/assets/images/event-0.png" alt="Event Banner" class="event-banner" />
+      <div class="event-header-info">
+        <h1>John Pedder: Woodblock Prints</h1>
+        <div class="event-info-box">
+          <p class="event-datetime">Saturday, March 18 2023, 9:30PM</p>
+          <button class="book-btn" @click="goToBooking">Book now</button>
+          <button class="secondary-btn" @click="goToVenue">Program promoter</button>
+          <p class="refund-info">No Refunds</p>
         </div>
       </div>
+    </div>
 
-      <div class="event-content">
-        <div class="event-image">
-          <img :src="event.imageUrl || placeholderImage" :alt="event.name">
+    <div class="event-content">
+      <div class="left-column">
+        <h2>Adelaide Oval</h2>
+        <p class="description">
+          DesignHub organized a 3D Modeling Workshop using Blender on 16th February at 5 PM...
+        </p>
+
+        <h3>Description</h3>
+        <p>
+          DesignHub organized a 3D Modeling Workshop using Blender on 16th February at 5 PM...
+        </p>
+
+        <h3>Hours</h3>
+        <p>Weekdays hour: <strong>7PM - 10PM</strong></p>
+        <p>Sunday hour: <strong>7PM - 10PM</strong></p>
+
+        <h3>Organizer Contact</h3>
+        <p>Please go to <a href="#">www.sneakypeeks.com</a> and refer the FAQ section for more detail</p>
+      </div>
+
+      <div class="right-column">
+        <h3>Event location</h3>
+        <img src="@/assets/images/map.png" alt="Map" class="map-img" />
+
+        <p><strong>Dream world wide in jakatra</strong></p>
+        <p>Dummy Location generation model by RSU ... Our approach generates more realistic dummy locations</p>
+
+        <h3>Tags</h3>
+        <div class="tags">
+          <span class="tag">Indonesia event</span>
+          <span class="tag">Jaskaran event</span>
+          <span class="tag">UI</span>
+          <span class="tag">Seminar</span>
         </div>
 
-        <div class="event-info">
-          <div class="event-description">
-            <h2>About This Event</h2>
-            <p>{{ event.description }}</p>
-          </div>
-
-          <div class="event-tickets">
-            <h2>Tickets</h2>
-            <div v-if="event.ticketTypes.length > 0" class="ticket-types">
-              <div 
-                v-for="ticket in event.ticketTypes" 
-                :key="ticket.id" 
-                class="ticket-card"
-                :class="{ selected: selectedTickets[ticket.id] }"
-                @click="selectTicket(ticket)"
-              >
-                <div class="ticket-info">
-                  <h3>{{ ticket.name }}</h3>
-                  <p>{{ ticket.description }}</p>
-                  <span class="ticket-price">${{ ticket.price }}</span>
-                </div>
-                <div v-if="selectedTickets[ticket.id]" class="ticket-quantity">
-                  <button 
-                    @click.stop="decrementTicket(ticket.id)"
-                    :disabled="selectedTickets[ticket.id] <= 0"
-                  >
-                    -
-                  </button>
-                  <span>{{ selectedTickets[ticket.id] }}</span>
-                  <button @click.stop="incrementTicket(ticket.id)">
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="no-tickets">
-              No tickets available for this event.
-            </div>
-
-            <div v-if="hasSelectedTickets" class="checkout-section">
-              <div class="total">
-                <span>Total:</span>
-                <span>${{ totalPrice.toFixed(2) }}</span>
-              </div>
-              <button 
-                class="btn-primary" 
-                @click="proceedToCheckout"
-                :disabled="!hasSelectedTickets"
-              >
-                Proceed to Checkout
-              </button>
-            </div>
-          </div>
+        <h3>Share with friends</h3>
+        <div class="social-icons">
+          <img src="@/assets/logos/google.png" alt="Facebook" />
+          <img src="@/assets/logos/spotify.png" alt="WhatsApp" />
+          <img src="@/assets/logos/youtube.png" alt="LinkedIn" />
+          <img src="@/assets/logos/zoom.png" alt="Twitter" />
         </div>
       </div>
+    </div>
+
+    <div class="related-events">
+      <h2>Other events you may like</h2>
+      <Upcoming/>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
-import placeholderImage from '@/assets/images/event-placeholder.jpg'
+import Upcoming from '@/components/UpcomingEventFilters.vue'
 
 export default {
   name: 'EventDetailsPage',
-  data() {
-    return {
-      loading: false,
-      error: null,
-      event: null,
-      selectedTickets: {},
-      placeholderImage
-    }
-  },
-  computed: {
-    ...mapGetters('user', ['isAuthenticated']),
-    hasSelectedTickets() {
-      return Object.values(this.selectedTickets).some(qty => qty > 0)
-    },
-    totalPrice() {
-      return Object.entries(this.selectedTickets).reduce((total, [ticketId, quantity]) => {
-        if (quantity > 0) {
-          const ticket = this.event.ticketTypes.find(t => t.id === ticketId)
-          return total + (ticket.price * quantity)
-        }
-        return total
-      }, 0)
-    }
-  },
-  async created() {
-    await this.fetchEventDetails()
+  components: {
+    Upcoming,
   },
   methods: {
-    ...mapActions('events', ['fetchEventById']),
-    async fetchEventDetails() {
-      this.loading = true
-      this.error = null
-      try {
-        const eventId = this.$route.params.id
-        this.event = await this.fetchEventById(eventId)
-        // Initialize selected tickets object
-        this.selectedTickets = this.event.ticketTypes.reduce((acc, ticket) => {
-          acc[ticket.id] = 0
-          return acc
-        }, {})
-      } catch (err) {
-        this.error = 'Failed to load event details. Please try again later.'
-        console.error('Error fetching event:', err)
-      } finally {
-        this.loading = false
-      }
+    // Navigate to booking confirmation
+    goToBooking() {
+      this.$router.push('/booking-confirmation')
     },
-    formatDate(dateString) {
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }
-      return new Date(dateString).toLocaleDateString(undefined, options)
-    },
-    selectTicket(ticket) {
-      if (this.selectedTickets[ticket.id] === 0) {
-        this.$set(this.selectedTickets, ticket.id, 1)
-      }
-    },
-    incrementTicket(ticketId) {
-      this.$set(this.selectedTickets, ticketId, this.selectedTickets[ticketId] + 1)
-    },
-    decrementTicket(ticketId) {
-      if (this.selectedTickets[ticketId] > 0) {
-        this.$set(this.selectedTickets, ticketId, this.selectedTickets[ticketId] - 1)
-      }
-    },
-    proceedToCheckout() {
-      if (!this.isAuthenticated) {
-        this.$router.push({ 
-          name: 'Login', 
-          query: { redirect: this.$route.path }
-        })
-        return
-      }
-
-      const selected = Object.entries(this.selectedTickets)
-        .filter(([, qty]) => qty > 0)
-        .map(([ticketId, qty]) => ({
-          ticketId,
-          quantity: qty
-        }))
-
-      this.$router.push({
-        name: 'Checkout',
-        params: { eventId: this.event.id },
-        query: { tickets: JSON.stringify(selected) }
-      })
+    // Navigate to venue details page
+    goToVenue() {
+      this.$router.push('/venue')
     }
   }
 }
 </script>
 
+
 <style scoped>
-.event-details-page {
-  padding: 2rem 0;
-}
-
-.loading, .error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-}
-
-.error {
-  color: #e74c3c;
-}
-
-.event-container {
-  max-width: 1200px;
-  margin: 0 auto;
+.event-details-container {
+  padding: 20px;
 }
 
 .event-header {
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.event-header h1 {
-  margin-bottom: 1rem;
-  font-size: 2rem;
-}
-
-.event-meta {
   display: flex;
-  justify-content: center;
-  gap: 2rem;
-  color: #666;
-  margin-bottom: 1.5rem;
+  position: relative;
+  margin-bottom: 30px;
 }
 
-.event-meta i {
-  margin-right: 0.5rem;
+.event-banner {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.event-header-info {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  max-width: 300px;
+}
+
+.event-datetime {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.book-btn {
+  background: #f25c94;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #f5f5f5;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.refund-info {
+  font-size: 12px;
+  color: #666;
 }
 
 .event-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  display: flex;
+  gap: 40px;
 }
 
-.event-image img {
+.left-column, .right-column {
+  flex: 1;
+}
+
+h2, h3 {
+  margin-top: 20px;
+}
+
+.map-img {
   width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 
-.event-info {
+.tags {
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.event-description h2 {
-  margin-bottom: 1rem;
+.tag {
+  background: #eee;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
 }
 
-.event-description p {
-  line-height: 1.6;
-}
-
-.ticket-types {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.ticket-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ticket-card.selected {
-  border-color: #42b983;
-  background-color: rgba(66, 185, 131, 0.05);
-}
-
-.ticket-card:hover {
-  border-color: #42b983;
-}
-
-.ticket-info h3 {
-  margin-bottom: 0.5rem;
-}
-
-.ticket-info p {
-  color: #666;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.ticket-price {
-  font-weight: bold;
-  color: #42b983;
-}
-
-.ticket-quantity {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.ticket-quantity button {
+.social-icons img {
   width: 30px;
-  height: 30px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
+  margin-right: 10px;
 }
 
-.ticket-quantity button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ticket-quantity span {
-  min-width: 30px;
-  text-align: center;
-}
-
-.checkout-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #eee;
-}
-
-.total {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 1rem;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:hover {
-  background-color: #3aa876;
-}
-
-.btn-primary:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.no-tickets {
-  padding: 1rem;
-  text-align: center;
-  color: #666;
-  background: #f8f9fa;
-  border-radius: 8px;
+.related-events {
+  margin-top: 60px;
 }
 </style>
