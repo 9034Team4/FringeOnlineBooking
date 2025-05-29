@@ -71,21 +71,60 @@ export const MessageController = {
    */
   async getMessages(req: Request, res: Response) {
     const userId = req.user.userId;
-    const contactId = req.query.contactId as string;
     const messageRepo = AppDataSource.getRepository(Message);
-
-    if (!contactId) {
-      return res.status(400).json({ message: 'contactId is required' });
-    }
 
     const messages = await messageRepo.find({
       where: [
-        { sender: { id: userId }, receiver: { id: contactId } },
-        { sender: { id: contactId }, receiver: { id: userId } }
+        { sender: { id: userId } },
+        { receiver: { id: userId } }
       ],
+      relations: ['sender', 'receiver'],
+      order: { createdAt: 'DESC' }
+    });
+
+    res.json({ messages });
+  },
+
+  async getConversation(req: Request, res: Response) {
+    const userId = req.user.userId;
+    const { userId: otherUserId } = req.params;
+    const messageRepo = AppDataSource.getRepository(Message);
+
+    const userRepo = AppDataSource.getRepository(User);
+    const otherUser = await userRepo.findOne({ where: { id: otherUserId } });
+    if (!otherUser) return res.status(404).json({ message: 'User not found' });
+
+    const messages = await messageRepo.find({
+      where: [
+        { sender: { id: userId }, receiver: { id: otherUserId } },
+        { sender: { id: otherUserId }, receiver: { id: userId } }
+      ],
+      relations: ['sender', 'receiver'],
       order: { createdAt: 'ASC' }
     });
 
     res.json({ messages });
+  },
+
+  async deleteMessage(req: Request, res: Response) {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const messageRepo = AppDataSource.getRepository(Message);
+
+    const message = await messageRepo.findOne({
+      where: { id },
+      relations: ['sender']
+    });
+
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    if (message.sender.id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this message' });
+    }
+
+    await messageRepo.remove(message);
+    res.json({ message: 'Message deleted' });
   }
 }; 

@@ -4,17 +4,17 @@ import { User } from './User';
 @Entity()
 export class Message {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => User, user => user.sentMessages)
-  sender: User;
+  sender!: User;
 
   @ManyToOne(() => User, user => user.receivedMessages)
-  receiver: User;
+  receiver!: User;
 
   @Column()
-  content: string;
+  content!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 } 

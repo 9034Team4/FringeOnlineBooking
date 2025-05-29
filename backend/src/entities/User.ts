@@ -9,6 +9,7 @@ import {
 import { Ticket } from './Ticket';
 import { Booking } from './Booking';
 import { Event } from './Event';
+import { Message } from './Message';
 
 /**
  * User entity representing public users of the booking system.
@@ -100,4 +101,24 @@ export class User {
   /** Timestamp of last login */
   @Column({ nullable: true })
   lastLogin?: Date;
+
+  /** Staff group assignment */
+  @Column({ nullable: true })
+  group?: string;
+
+  /** Event assigned to staff */
+  @Column({ nullable: true })
+  assignedEvent?: string;
+
+  /** Staff status */
+  @Column({ nullable: true })
+  status?: string;
+
+  /** Messages sent by the user */
+  @OneToMany(() => Message, message => message.sender)
+  sentMessages!: Message[];
+
+  /** Messages received by the user */
+  @OneToMany(() => Message, message => message.receiver)
+  receivedMessages!: Message[];
 }
