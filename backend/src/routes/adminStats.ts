@@ -6,6 +6,8 @@ import { UserRole } from '../entities/User';
 const router = Router();
 const adminOnly = [requireAuth, requireRole([UserRole.ADMIN])];
 
+console.log('adminStats 路由已加载');
+
 /**
  * @swagger
  * tags:
@@ -147,5 +149,9 @@ router.get('/ticket-distribution', ...adminOnly, AdminStatsController.ticketDist
  *                         type: integer
  */
 router.get('/traffic', ...adminOnly, AdminStatsController.dailyTraffic);
+
+router.get('/admin/stats/test', (req, res) => {
+  res.json({ msg: 'admin stats test ok' });
+});
 
 export default router; 

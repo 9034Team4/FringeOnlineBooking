@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authenticateJWT, authorizeRole } from './middleware/auth';
+import { UserRole } from './entities/User';
 
 // Admin controllers
 import { EventController } from './controllers/admin/EventController';
@@ -9,6 +10,7 @@ import { SeatController } from './controllers/admin/SeatController';
 import { TicketAdminController } from './controllers/admin/TicketAdminController';
 import { AdminAuthController } from './controllers/admin/AdminAuthController';
 import { AdminSettingsController } from './controllers/admin/AdminSettingsController';
+import { AdminStatsController } from './controllers/admin/AdminStatsController';
 
 // Public controllers
 import { PublicEventController } from './controllers/public/PublicEventController';
@@ -21,8 +23,7 @@ import { HealthController } from './controllers/HealthController';
 
 const router = Router();
 
-// 🌐 Public Booking Portal Routes
-
+// ================= Monitoring & Health =================
 /**
  * @swagger
  * /:
@@ -49,6 +50,7 @@ router.get('/', HealthController.status);
  */
 router.get('/health', HealthController.checkStatus);
 
+// ================= User Auth =================
 /**
  * @swagger
  * /auth/register:
@@ -99,6 +101,167 @@ router.post('/auth/login', async (req, res) => {
   await UserAuthController.login(req, res);
 });
 
+// ================= Admin Stats =================
+/**
+ * @swagger
+ * /admin/stats/users:
+ *   get:
+ *     summary: 获取用户总数
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 用户总数
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ */
+router.get('/admin/stats/users', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.totalUsers(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/stats/events:
+ *   get:
+ *     summary: 获取活动总数
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 活动总数
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ */
+router.get('/admin/stats/events', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.totalEvents(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/stats/bookings:
+ *   get:
+ *     summary: 获取订单总数
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 订单总数
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ */
+router.get('/admin/stats/bookings', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.totalBookings(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/stats/revenue:
+ *   get:
+ *     summary: 获取近7天每周收入
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 每周收入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 days:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                       total:
+ *                         type: number
+ */
+router.get('/admin/stats/revenue', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.weeklyRevenue(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/stats/ticket-distribution:
+ *   get:
+ *     summary: 获取票分布饼图数据
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 票分布数据
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 distribution:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       label:
+ *                         type: string
+ *                       value:
+ *                         type: integer
+ */
+router.get('/admin/stats/ticket-distribution', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.ticketDistribution(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/stats/traffic:
+ *   get:
+ *     summary: 获取日流量统计
+ *     tags: [AdminStats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 日流量数据
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 hours:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       hour:
+ *                         type: string
+ *                       count:
+ *                         type: integer
+ */
+router.get('/admin/stats/traffic', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  AdminStatsController.dailyTraffic(req, res);
+});
+
+// ================= 其他已有路由（保留原有逻辑） =================
 /**
  * @swagger
  * /tickets:
@@ -872,7 +1035,7 @@ router.post('/admin/login', (req, res) => {
  *       200:
  *         description: List of all events
  */
-router.get('/admin/events', authenticateJWT, authorizeRole('admin'), (req, res) => {
+router.get('/admin/events', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
   EventController.getAll(req, res);
 });
 
@@ -888,7 +1051,7 @@ router.get('/admin/events', authenticateJWT, authorizeRole('admin'), (req, res) 
  *       201:
  *         description: Event created
  */
-router.post('/admin/events', authenticateJWT, authorizeRole('admin'), (req, res) => {
+router.post('/admin/events', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
   EventController.create(req, res);
 });
 
@@ -910,7 +1073,7 @@ router.post('/admin/events', authenticateJWT, authorizeRole('admin'), (req, res)
  *       200:
  *         description: Event detail
  */
-router.get('/admin/events/:id', authenticateJWT, authorizeRole('admin'), (req, res) => {
+router.get('/admin/events/:id', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
   EventController.getById(req, res);
 });
 
@@ -932,7 +1095,7 @@ router.get('/admin/events/:id', authenticateJWT, authorizeRole('admin'), (req, r
  *       200:
  *         description: Event updated
  */
-router.put('/admin/events/:id', authenticateJWT, authorizeRole('admin'), (req, res) => {
+router.put('/admin/events/:id', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
   EventController.update(req, res);
 });
 
@@ -954,7 +1117,7 @@ router.put('/admin/events/:id', authenticateJWT, authorizeRole('admin'), (req, r
  *       204:
  *         description: Event deleted
  */
-router.delete('/admin/events/:id', authenticateJWT, authorizeRole('admin'), (req, res) => {
+router.delete('/admin/events/:id', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
   EventController.remove(req, res);
 });
 
