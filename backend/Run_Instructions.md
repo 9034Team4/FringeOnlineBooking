@@ -114,6 +114,10 @@ http://localhost:3000/api-docs
 
 Here, you can explore all available API endpoints with sample inputs and responses.
 
+**Note:**
+- The Swagger documentation is now fully synchronized with the actual Express routes. All endpoints shown in Swagger (including all `/admin/stats/*` admin statistics APIs) are guaranteed to be available in the backend.
+- If you see an endpoint in Swagger, you can call it directly (with the required authentication if needed).
+
 ---
 
 ## 6. 🩺 System Health Check
@@ -161,17 +165,34 @@ You can validate the backend using:
 
 - Swagger test interface (`/api-docs`)
 - Postman or curl for endpoint testing
-- Unit/integration test scripts (coming in `/tests/` folder)
+- Unit/integration test scripts (see `/tests/` folder)
 
 ---
 
-## 8. 🐛 Troubleshooting
+## 8. 🔒 Admin Statistics Endpoints
+
+All admin statistics APIs are now available and protected. You must provide a valid admin JWT token to access these endpoints:
+
+- `/api/admin/stats/users` — Get total user count
+- `/api/admin/stats/events` — Get total event count
+- `/api/admin/stats/bookings` — Get total booking count
+- `/api/admin/stats/revenue` — Get weekly revenue (last 7 days)
+- `/api/admin/stats/ticket-distribution` — Get ticket distribution by type
+- `/api/admin/stats/traffic` — Get daily traffic stats
+
+> All these endpoints are documented in Swagger and require admin authentication.
+
+---
+
+## 9. 🐛 Troubleshooting
 
 | Problem | Solution |
 |--------|----------|
 | ❌ MySQL access denied | Check `DB_USER`, `DB_PASS` in `.env` |
 | ❌ Redis connection error | Confirm Redis is running on correct host/port |
-| ❌ Swagger shows "No operations defined" | Make sure JSDoc annotations are correctly added |
+| ❌ Swagger shows "No operations defined" | Make sure JSDoc annotations are correctly added and routes are registered |
+| ❌ 404 Not Found on API | Ensure the endpoint is registered in `routes.ts` and you are using the correct HTTP method and path |
+| ❌ 401/403 Unauthorized | Make sure you are providing a valid JWT token with the correct role |
 | ❌ TypeError: Cannot read property 'query' of undefined | Ensure `app.set('db', AppDataSource)` is set in `app.ts` |
 
 ---
@@ -181,6 +202,7 @@ You can validate the backend using:
 - Don't commit your `.env` file — it's already in `.gitignore`
 - Keep dependencies updated (`npm outdated`)
 - Make sure to pull from main often and resolve merge conflicts early
+- If you add new endpoints, always add both the route and the Swagger annotation to keep documentation and code in sync
 
 ---
 
