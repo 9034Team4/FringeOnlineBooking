@@ -7,7 +7,7 @@
         <div class="event-info-box">
           <p class="event-datetime">Saturday, March 18 2023, 9:30PM</p>
           <button class="book-btn" @click="goToBooking">Book now</button>
-          <button class="secondary-btn" @click="goToVenue">Program promoter</button>
+          <button class="secondary-btn" @click="goToVenue">Venue Information</button>
           <p class="refund-info">No Refunds</p>
         </div>
       </div>
@@ -35,8 +35,13 @@
 
       <div class="right-column">
         <h3>Event location</h3>
-        <img src="@/assets/images/map.png" alt="Map" class="map-img" />
-
+        <GMapMap
+          :center="{ lat: -34.9285, lng: 138.6007 }"
+          :zoom="14"
+          style="width: 100%; height: 300px"
+        >
+          <GMapMarker :position="{ lat: -34.9285, lng: 138.6007 }" />
+        </GMapMap>
         <p><strong>Dream world wide in jakatra</strong></p>
         <p>Dummy Location generation model by RSU ... Our approach generates more realistic dummy locations</p>
 
@@ -67,11 +72,14 @@
 
 <script>
 import Upcoming from '@/components/UpcomingEventFilters.vue'
+import { GMapMap, GMapMarker } from '@fawmi/vue-google-maps'
 
 export default {
   name: 'EventDetailsPage',
   components: {
     Upcoming,
+    GMapMap,
+    GMapMarker
   },
   methods: {
     // Navigate to booking confirmation

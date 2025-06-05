@@ -50,6 +50,31 @@ export default {
       } finally {
         commit('SET_LOADING', false)
       }
+    },
+    async getUserBookings() {
+      // TODO: Replace with real API call
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const mockBookings = [
+            {
+              id: 'booking1',
+              event: {
+                id: 'event1',
+                title: 'Mock Event 1',
+                date: new Date().toISOString(),
+                location: 'Adelaide Oval'
+              },
+              tickets: [
+                { id: 'ticket1', price: 50 }
+              ],
+              total: 50,
+              createdAt: new Date().toISOString(),
+              canCancel: true
+            }
+          ]
+          resolve(mockBookings)
+        }, 500)
+      })
     }
   },
   getters: {

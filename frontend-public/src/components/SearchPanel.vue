@@ -30,20 +30,25 @@
   </div>
 </template>
 
-<script>
-// import { ref } from 'vue'
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-// const eventType = ref('')
-// const location = ref('')
-// const dateTime = ref('')
+const eventType = ref('')
+const location = ref('')
+const dateTime = ref('')
+const router = useRouter()
 
-// function search() {
-//   console.log('Searching:', {
-//     eventType: eventType.value,
-//     location: location.value,
-//     dateTime: dateTime.value
-//   })
-// }
+function search() {
+  router.push({
+    path: '/events',
+    query: {
+      eventType: eventType.value,
+      location: location.value,
+      dateTime: dateTime.value
+    }
+  })
+}
 </script>
 
 <style scoped>
