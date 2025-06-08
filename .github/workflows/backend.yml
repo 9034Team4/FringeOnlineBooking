@@ -29,7 +29,6 @@ jobs:
         run: |
           cd backend
           npm run test
-        # ✅ 确保 jest 的测试脚本存在并正确配置（例如：npm run test）
 
   deploy:
     needs: test
