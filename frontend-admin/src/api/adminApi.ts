@@ -29,7 +29,7 @@ export const adminDashboard = {
 // --- Admin Settings ---
 export const adminSettings = {
   getAll: () =>
-    axiosInstance.get('/admin/settings'), // TODO: Implement on backend if not present
+    axiosInstance.get('/admin/settings'), 
   update: (key: string, data: { value: any }) =>
     axiosInstance.put(`/admin/settings/${key}`, data),
 };
