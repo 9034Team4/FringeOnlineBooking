@@ -27,6 +27,9 @@ export class Event {
   @Column('text')
   description!: string; // Full description of the event
 
+  @Column({ nullable: true })
+  imageUrl!: string; // Cover image URL for the event
+
   @Column()
   startTime!: Date; // Start datetime
 

@@ -4,7 +4,7 @@
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p class="mt-3">正在加载活动信息...</p>
+      <p class="mt-3">Loading event information...</p>
     </div>
     
     <div v-else-if="error" class="error-container">
@@ -15,14 +15,14 @@
     
     <div v-else>
       <div class="event-header">
-        <img :src="event.coverImage || '@/assets/images/event-0.png'" alt="Event Banner" class="event-banner" />
+        <img :src="event.coverImage || '/images/event-placeholder.jpg'" alt="Event Banner" class="event-banner" />
         <div class="event-header-info">
-          <h1>{{ event.title }}</h1>
+          <h1>{{ event.name || event.title }}</h1>
           <div class="event-info-box">
             <p class="event-datetime">{{ formatDate(event.startDate) }}</p>
-            <button class="book-btn" @click="goToSeatSelection">选座购票</button>
-            <button class="secondary-btn" @click="goToVenue">场馆信息</button>
-            <p class="refund-info">{{ event.refundPolicy || '不支持退款' }}</p>
+            <button class="book-btn" @click="goToSeatSelection">Book Tickets</button>
+            <button class="secondary-btn" style="margin-left: 5px;" @click="goToVenue">Venue Info</button>
+            <p class="refund-info">{{ event.refundPolicy || 'No refunds available' }}</p>
           </div>
         </div>
       </div>
@@ -34,19 +34,19 @@
             {{ event.shortDescription }}
           </p>
 
-          <h3>活动详情</h3>
+          <h3>Event Details</h3>
           <div v-html="event.description"></div>
 
-          <h3>活动时间</h3>
-          <p>开始时间: <strong>{{ formatTime(event.startDate) }}</strong></p>
-          <p>结束时间: <strong>{{ formatTime(event.endDate) }}</strong></p>
+          <h3>Event Time</h3>
+          <p>Start Time: <strong>{{ formatTime(event.startDate) }}</strong></p>
+          <p>End Time: <strong>{{ formatTime(event.endDate) }}</strong></p>
 
-          <h3>组织者联系方式</h3>
-          <p>{{ event.organizerContact || '请访问活动主页获取更多信息' }}</p>
+          <h3>Organizer Contact</h3>
+          <p>{{ event.organizerContact || 'Please visit the event website for more information' }}</p>
         </div>
 
         <div class="right-column">
-          <h3>活动地点</h3>
+          <h3>Event Location</h3>
           <GMapMap
             :center="mapCenter"
             :zoom="14"
@@ -57,7 +57,7 @@
           <p><strong>{{ event.venue?.name }}</strong></p>
           <p>{{ event.venue?.address }}</p>
 
-          <h3>门票价格</h3>
+          <h3>Ticket Prices</h3>
           <div class="ticket-prices">
             <div v-for="(price, type) in event.ticketPrices" :key="type" class="ticket-price-item">
               <span class="ticket-type">{{ type }}</span>
@@ -65,12 +65,12 @@
             </div>
           </div>
 
-          <h3>标签</h3>
+          <h3>Tags</h3>
           <div class="tags">
             <span v-for="tag in event.tags" :key="tag" class="tag">{{ tag }}</span>
           </div>
 
-          <h3>分享给好友</h3>
+          <h3>Share with Friends</h3>
           <div class="social-icons">
             <a href="#" @click.prevent="shareEvent('facebook')"><i class="bi bi-facebook"></i></a>
             <a href="#" @click.prevent="shareEvent('twitter')"><i class="bi bi-twitter"></i></a>
@@ -81,7 +81,7 @@
       </div>
 
       <div class="related-events">
-        <h2>你可能还喜欢</h2>
+        <h2>You Might Also Like</h2>
         <Upcoming/>
       </div>
     </div>
@@ -93,6 +93,7 @@ import Upcoming from '@/components/UpcomingEventFilters.vue'
 import { Map as GMapMap, Marker as GMapMarker } from '@fawmi/vue-google-maps'
 import axios from 'axios'
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'EventDetailsPage',
@@ -117,31 +118,107 @@ export default {
     })
     const loading = ref(true)
     const error = ref(null)
+    const router = useRouter()
 
     const mapCenter = computed(() => {
-      if (event.value.venue?.latitude && event.value.venue?.longitude) {
-        return {
-          lat: parseFloat(event.value.venue.latitude),
-          lng: parseFloat(event.value.venue.longitude)
+      // 如果有场馆信息且有经纬度，则使用场馆的位置
+      if (event.value.venue) {
+        // 尝试从venue中获取经纬度
+        if (event.value.venue.latitude && event.value.venue.longitude) {
+          return {
+            lat: parseFloat(event.value.venue.latitude),
+            lng: parseFloat(event.value.venue.longitude)
+          }
+        }
+        
+        // 如果没有经纬度但有位置信息，可以使用位置名称
+        // 这里我们使用阿德莱德的不同场馆的实际坐标
+        const venueLocations = {
+          'Adelaide Festival Centre': { lat: -34.9206, lng: 138.5995 },
+          'Adelaide Convention Centre': { lat: -34.9207, lng: 138.5942 },
+          'The Garden of Unearthly Delights': { lat: -34.9210, lng: 138.6107 },
+          'Gluttony': { lat: -34.9187, lng: 138.6123 },
+          'Adelaide Town Hall': { lat: -34.9281, lng: 138.6006 }
+        }
+        
+        // 如果能在预定义地点中找到场馆，使用其坐标
+        if (event.value.venue.name && venueLocations[event.value.venue.name]) {
+          return venueLocations[event.value.venue.name]
+        }
+        
+        // 如果有位置信息但没有坐标，可以使用位置名称的默认坐标
+        if (event.value.venue.location) {
+          console.log('Using venue location:', event.value.venue.location)
+          // 这里可以添加更多位置的映射
         }
       }
-      return { lat: -34.9285, lng: 138.6007 } // Default location
+      
+      // 默认返回阿德莱德市中心坐标
+      return { lat: -34.9285, lng: 138.6007 }
     })
 
     const fetchEventDetails = async () => {
-      const eventId = window.location.pathname.split('/').pop()
+      // 从路由参数中获取事件ID
+      const eventId = router.currentRoute.value.params.id
+      
+      if (!eventId) {
+        error.value = 'Event ID not found'
+        loading.value = false
+        return
+      }
       
       try {
         loading.value = true
+        console.log(`Fetching event details for ID: ${eventId}`)
         const response = await axios.get(`/api/public/events/${eventId}`)
         
         if (response.data.success) {
+          console.log('Event data received:', response.data.data)
           event.value = response.data.data
+          
+          // 处理图片URL
+          if (event.value.imageUrl) {
+            event.value.coverImage = `/images/${event.value.imageUrl}`
+          } else if (event.value.venue?.imageUrl) {
+            event.value.coverImage = event.value.venue.imageUrl
+          }
+          
+          // 处理日期
+          event.value.startDate = event.value.startTime
+          event.value.endDate = event.value.endTime
+          
+          // 处理描述
+          if (!event.value.shortDescription) {
+            event.value.shortDescription = event.value.description.substring(0, 150) + '...'
+          }
+          
+          // 处理票价
+          if (!event.value.ticketPrices) {
+            event.value.ticketPrices = {
+              'Standard': parseFloat(event.value.basePrice) || 0
+            }
+            
+            // 如果有座位计划，添加VIP票价
+            if (event.value.seatingPlan && event.value.seatingPlan.sections) {
+              const vipSection = event.value.seatingPlan.sections.find(s => s.name === 'VIP')
+              if (vipSection && vipSection.rows && vipSection.rows.length > 0 && 
+                  vipSection.rows[0].seats && vipSection.rows[0].seats.length > 0) {
+                event.value.ticketPrices['VIP'] = vipSection.rows[0].seats[0].price
+              }
+            }
+          }
+          
+          // 处理标签
+          if (!event.value.tags || event.value.tags.length === 0) {
+            event.value.tags = [event.value.category?.name || 'Event']
+          }
+          
         } else {
-          error.value = response.data.message
+          error.value = response.data.message || 'Failed to load event details'
         }
       } catch (err) {
-        error.value = err.message || '加载活动详情失败'
+        console.error('Error fetching event:', err)
+        error.value = err.message || 'Failed to load event details'
       } finally {
         loading.value = false
       }
@@ -150,7 +227,7 @@ export default {
     const formatDate = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
-      return date.toLocaleDateString('zh-CN', {
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -161,7 +238,7 @@ export default {
     const formatTime = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
-      return date.toLocaleTimeString('zh-CN', {
+      return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       })
@@ -208,12 +285,12 @@ export default {
     }
   },
   methods: {
-    // 跳转到座位选择页面
+    // Navigate to seat selection page
     goToSeatSelection() {
       const eventId = this.$route.params.id
       this.$router.push(`/events/${eventId}/seats`)
     },
-    // 跳转到场馆详情页面
+    // Navigate to venue details page
     goToVenue() {
       if (this.event.venue) {
         this.$router.push(`/venue/${this.event.venue.id}`)

@@ -8,22 +8,60 @@
         <img src="../assets/icons/cart.svg" alt="Cart" class="cart-icon" />
         <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
       </router-link>
-      <router-link to="/auth" class="login-link">Login</router-link>
-      <router-link to="/register" class="signup-btn">Sign Up</router-link>
-      <router-link to="/profile" class="profile-btn" title="Profile">
-        <img src="@/assets/icons/profile.svg" alt="Profile" class="profile-icon" />
-      </router-link>
+      
+      <!-- Show login and signup buttons when not authenticated -->
+      <template v-if="!isAuthenticated">
+        <router-link to="/login" class="login-link">Login</router-link>
+        <router-link to="/register" class="signup-btn">Sign Up</router-link>
+      </template>
+      
+      <!-- Show user profile and dropdown menu when authenticated -->
+      <div v-else class="user-menu">
+        <router-link to="/profile" class="profile-btn" title="Profile">
+          <img :src="userAvatar" alt="Profile" class="profile-icon" />
+        </router-link>
+        <div class="dropdown-menu">
+          <router-link to="/profile">Profile</router-link>
+          <router-link to="/my-tickets">My Tickets</router-link>
+          <router-link to="/orders">Order History</router-link>
+          <a href="#" @click.prevent="handleLogout">Logout</a>
+        </div>
+      </div>
     </nav>
   </header>
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+
 export default {
   name: 'PageHeader',
-  computed: {
-    cartItemCount() {
+  setup() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+    
+    const isAuthenticated = computed(() => authStore.isAuthenticated)
+    const userAvatar = computed(() => {
+      return authStore.user?.avatar || require('@/assets/icons/profile.svg')
+    })
+    
+    const cartItemCount = computed(() => {
       // TODO: 从 Vuex store 获取购物车商品数量
       return 0
+    })
+    
+    const handleLogout = () => {
+      authStore.logout()
+      router.push('/')
+    }
+    
+    return {
+      isAuthenticated,
+      userAvatar,
+      cartItemCount,
+      handleLogout
     }
   }
 }
@@ -124,6 +162,10 @@ export default {
   padding: 0 4px;
 }
 
+.user-menu {
+  position: relative;
+}
+
 .profile-btn {
   display: flex;
   align-items: center;
@@ -131,7 +173,6 @@ export default {
   border-radius: 6px;
   background: transparent;
   transition: background-color 0.2s;
-  margin-left: 8px;
 }
 
 .profile-btn:hover {
@@ -141,6 +182,36 @@ export default {
 .profile-icon {
   width: 28px;
   height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 150px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 8px 0;
+  display: none;
+  z-index: 100;
+}
+
+.user-menu:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 8px 16px;
+  color: #333;
+  text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f5f5f5;
 }
 </style>
 

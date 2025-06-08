@@ -2,7 +2,6 @@ import { Router, Request, Response, NextFunction, RequestHandler } from 'express
 import { UserAuthController } from '../controllers/public/UserAuthController';
 import { AdminAuthController } from '../controllers/admin/AdminAuthController';
 import { TicketController } from '../controllers/public/TicketController';
-import { PublicEventController } from '../controllers/public/PublicEventController';
 import { PaymentController } from '../controllers/public/PaymentController';
 import { BookingController } from '../controllers/public/BookingController';
 import { requireAuth, requireRole, requireOwnership } from '../middleware/auth';
@@ -10,6 +9,7 @@ import { UserRole } from '../entities/User';
 import adminStatsRouter from './adminStats';
 import staffRouter from './staff';
 import messageRouter from './message';
+import publicRoutes from './publicRoutes';
 
 const router = Router();
 
@@ -310,54 +310,6 @@ router.post('/tickets/:id/refund', requireAuth, requireOwnership('ticket'), wrap
  */
 router.post('/tickets/:id/validate', requireAuth, requireRole([UserRole.ADMIN, UserRole.ORGANIZER]), wrapHandler(TicketController.validateTicket));
 
-// Public event routes
-/**
- * @swagger
- * /events:
- *   get:
- *     summary: List all public events
- *     tags: [Event]
- *     responses:
- *       200:
- *         description: List of events
- */
-router.get('/events', wrapHandler(PublicEventController.listEvents));
-
-/**
- * @swagger
- * /events/{id}:
- *   get:
- *     summary: Get event details
- *     tags: [Event]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Event details
- */
-router.get('/events/:id', wrapHandler(PublicEventController.getEventDetails));
-
-/**
- * @swagger
- * /events/search:
- *   get:
- *     summary: Search events
- *     tags: [Event]
- *     parameters:
- *       - in: query
- *         name: keyword
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Search results
- */
-router.get('/events/search', wrapHandler(PublicEventController.searchEvents));
-
 // Protected payment routes
 /**
  * @swagger
@@ -593,5 +545,8 @@ router.post('/bookings/:id/confirm', requireAuth, requireRole([UserRole.ADMIN, U
 router.use('/admin/stats', adminStatsRouter);
 router.use('/staff', staffRouter);
 router.use('/messages', messageRouter);
+
+// Mount public routes
+router.use('/public', publicRoutes);
 
 export default router; 
