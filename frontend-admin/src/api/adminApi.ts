@@ -37,7 +37,7 @@ export const adminSettings = {
 // --- Admin Tickets ---
 export const adminTickets = {
   getByEvent: (eventId: string, params?: any) =>
-    axiosInstance.get(`/admin/tickets/${eventId}`, { params }), // TODO: Confirm backend route
+    axiosInstance.get(`/admin/tickets/${eventId}`, { params }),
 };
 
 // --- Admin Venues ---
