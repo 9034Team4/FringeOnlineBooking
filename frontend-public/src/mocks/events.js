@@ -5,7 +5,7 @@ export default [
     title: 'BestSelller Book Bootcamp – write, Market & Publish Your Book – Lucknow',
     time: 'Saturday, March 18, 9.30PM',
     type: 'ONLINE EVENT – Attend anywhere',
-    isFree: true
+    isFree: false
   },
   {
     id: 2,
