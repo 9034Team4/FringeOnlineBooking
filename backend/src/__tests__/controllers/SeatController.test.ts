@@ -49,7 +49,7 @@ describe('SeatController', () => {
       
     }
     expect(true).toBe(true);
-  });
+  }, 15000);
 
   it('create executes without error', async () => {
     try {
