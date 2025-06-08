@@ -557,7 +557,7 @@ router.get('/api/tickets/validate/:ticketId', authenticateJWT, async (req, res) 
  *         description: Seat selected
  */
 router.post('/seats/select', authenticateJWT, (req, res) => {
-  return SeatController.lockSeats(req, res);
+  SeatController.lockSeats(req, res);
 });
 
 /**
@@ -586,7 +586,7 @@ router.post('/seats/select', authenticateJWT, (req, res) => {
  *         description: Seat locked successfully
  */
 router.post('/seats/lock-seat', authenticateJWT, (req, res) => {
-  return SeatController.lockSeats(req, res);
+  SeatController.lockSeats(req, res);
 });
 
 /**
@@ -615,7 +615,7 @@ router.post('/seats/lock-seat', authenticateJWT, (req, res) => {
  *         description: Seat released
  */
 router.post('/seats/release', authenticateJWT, (req, res) => {
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     message: 'This endpoint is deprecated. Seats are automatically released after timeout or can be released by admin.',
     data: null
@@ -1170,14 +1170,9 @@ router.delete('/admin/events/:id', authenticateJWT, authorizeRole(UserRole.ADMIN
  *                       status:
  *                         type: string
  */
-router.get(
-  '/admin/venues/:venueId/seats',
-  authenticateJWT,
-  authorizeRole(UserRole.ADMIN),
-  (req, res) => {
-    return SeatController.getByVenue(req, res);
-  }
-);
+router.get('/admin/venues/:venueId/seats', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  SeatController.getByVenue(req, res);
+});
 
 /**
  * @swagger
@@ -1213,14 +1208,9 @@ router.get(
  *       201:
  *         description: Seat created successfully
  */
-router.post(
-  '/admin/seats',
-  authenticateJWT,
-  authorizeRole(UserRole.ADMIN),
-  (req, res) => {
-    return SeatController.create(req, res);
-  }
-);
+router.post('/admin/seats', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  SeatController.create(req, res);
+});
 
 // ================= Event Seat Booking =================
 /**
@@ -1241,7 +1231,7 @@ router.post(
  *         description: List of available seats
  */
 router.get('/events/:eventId/seats', (req, res) => {
-  return SeatController.getAvailableSeats(req, res);
+  SeatController.getAvailableSeats(req, res);
 });
 
 /**
@@ -1270,7 +1260,7 @@ router.get('/events/:eventId/seats', (req, res) => {
  *         description: Seats locked successfully
  */
 router.post('/seats/lock', authenticateJWT, (req, res) => {
-  return SeatController.lockSeats(req, res);
+  SeatController.lockSeats(req, res);
 });
 
 /**
@@ -1299,7 +1289,7 @@ router.post('/seats/lock', authenticateJWT, (req, res) => {
  *         description: Seats confirmed successfully
  */
 router.post('/seats/confirm', authenticateJWT, (req, res) => {
-  return SeatController.confirmBooking(req, res);
+  SeatController.confirmBooking(req, res);
 });
 
 /**
@@ -1314,18 +1304,13 @@ router.post('/seats/confirm', authenticateJWT, (req, res) => {
  *       200:
  *         description: Expired seats released successfully
  */
-router.post(
-  '/admin/seats/release-expired',
-  authenticateJWT,
-  authorizeRole(UserRole.ADMIN),
-  (req, res) => {
-    return SeatController.releaseExpiredLocks(req, res);
-  }
-);
+router.post('/admin/seats/release-expired', authenticateJWT, authorizeRole(UserRole.ADMIN), (req, res) => {
+  SeatController.releaseExpiredLocks(req, res);
+});
 
 /**
  * @swagger
- * /seats/release-locks:
+ * /seats/release-user-locks:
  *   post:
  *     summary: User releases their own locked seats
  *     tags: [Seats]
@@ -1348,8 +1333,8 @@ router.post(
  *       200:
  *         description: User's locked seats released successfully
  */
-router.post('/seats/release-locks', authenticateJWT, (req, res) => {
-  return SeatController.releaseUserLocks(req, res);
+router.post('/seats/release-user-locks', authenticateJWT, (req, res) => {
+  SeatController.releaseUserLocks(req, res);
 });
 
 /**
@@ -1375,8 +1360,8 @@ router.post('/seats/release-locks', authenticateJWT, (req, res) => {
  *       200:
  *         description: Seat lock status retrieved successfully
  */
-router.get('/seats/lock-status', (req, res) => {
-  return SeatController.getLockStatus(req, res);
+router.get('/seats/lock-status', authenticateJWT, (req, res) => {
+  SeatController.getLockStatus(req, res);
 });
 
 export default router;

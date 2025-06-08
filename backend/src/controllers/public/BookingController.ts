@@ -14,16 +14,17 @@ export const BookingController = {
   /**
    * Get seat map for an event
    */
-  async getSeatMap(req: Request, res: Response) {
+  async getSeatMap(req: Request, res: Response): Promise<void> {
     try {
       const { eventId } = req.params;
       const userId = req.user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Authentication required'
         });
+        return;
       }
 
       // TODO: DB integration - Fetch seat map
@@ -49,14 +50,14 @@ export const BookingController = {
         }
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Seat map retrieved successfully',
         data: mockSeatMap
       });
     } catch (err: unknown) {
       console.error('Error fetching seat map:', err);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to fetch seat map',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -67,14 +68,15 @@ export const BookingController = {
   /**
    * Book tickets for an event
    */
-  async bookTicket(req: Request, res: Response) {
+  async bookTicket(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Authentication required'
         });
+        return;
       }
 
       const validatedData = bookingCreateSchema.parse(req.body);
@@ -102,7 +104,7 @@ export const BookingController = {
         createdAt: new Date().toISOString()
       };
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         message: 'Booking created successfully',
         data: mockBooking
@@ -110,13 +112,14 @@ export const BookingController = {
     } catch (err: unknown) {
       console.error('Error creating booking:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
+        return;
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to create booking',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -127,16 +130,17 @@ export const BookingController = {
   /**
    * Get booking details by ID
    */
-  async getBookingDetails(req: Request, res: Response) {
+  async getBookingDetails(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const userId = req.user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Authentication required'
         });
+        return;
       }
 
       // TODO: DB integration - Fetch booking details
@@ -163,14 +167,14 @@ export const BookingController = {
         createdAt: new Date().toISOString()
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Booking details retrieved successfully',
         data: mockBooking
       });
     } catch (err: unknown) {
       console.error('Error fetching booking details:', err);
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Booking not found',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -181,16 +185,17 @@ export const BookingController = {
   /**
    * Cancel a booking
    */
-  async cancelBooking(req: Request, res: Response) {
+  async cancelBooking(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const userId = req.user?.id;
 
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Authentication required'
         });
+        return;
       }
 
       const validatedData = bookingCancelSchema.parse(req.body);
@@ -211,7 +216,7 @@ export const BookingController = {
         cancelledAt: new Date().toISOString()
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Booking cancelled successfully',
         data: mockCancelledBooking
@@ -219,13 +224,14 @@ export const BookingController = {
     } catch (err: unknown) {
       console.error('Error cancelling booking:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
+        return;
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to cancel booking',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -236,14 +242,15 @@ export const BookingController = {
   /**
    * Get all bookings for the current user
    */
-  async getUserBookings(req: Request, res: Response) {
+  async getUserBookings(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Authentication required'
         });
+        return;
       }
 
       const validatedQuery = bookingQuerySchema.parse(req.query);
@@ -277,7 +284,7 @@ export const BookingController = {
         }
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'User bookings retrieved successfully',
         data: mockBookings
@@ -285,13 +292,14 @@ export const BookingController = {
     } catch (err: unknown) {
       console.error('Error fetching user bookings:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid query parameters',
           error: err.message
         });
+        return;
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to fetch user bookings',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -302,88 +310,92 @@ export const BookingController = {
   /**
    * Get all bookings for the current logged-in user (new endpoint)
    */
-  async getMyBookings(req: Request, res: Response) {
+  async getMyBookings(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       // TODO: Fetch all bookings for the user from the database
       const mockBookings = [
         { id: 'booking-1', event: 'Sample Event', status: 'CONFIRMED', createdAt: new Date().toISOString() }
       ];
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'User bookings retrieved successfully',
         data: mockBookings
       });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to fetch user bookings', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch user bookings', error: err.message });
     }
   },
 
   /**
    * Export the specified booking details and ticket info as a downloadable PDF or CSV (new endpoint)
    */
-  async exportBooking(req: Request, res: Response) {
+  async exportBooking(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const { id } = req.params;
       // TODO: Fetch booking, validate ownership, generate PDF/CSV
       // For now, return a mock download link
       const mockExportLink = `https://example.com/downloads/booking-${id}.pdf`;
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Booking export generated',
         data: { downloadUrl: mockExportLink }
       });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to export booking', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to export booking', error: err.message });
     }
   },
 
   /**
    * Cancel a booking by ID (new endpoint)
    */
-  async cancelBookingById(req: Request, res: Response) {
+  async cancelBookingById(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const { id } = req.params;
       // TODO: Validate booking ownership and cancel booking in DB
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: `Booking ${id} cancelled successfully`,
         data: { bookingId: id, status: 'CANCELLED' }
       });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to cancel booking', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to cancel booking', error: err.message });
     }
   },
 
   /**
    * Confirm a booking by ID (new endpoint)
    */
-  async confirmBookingById(req: Request, res: Response) {
+  async confirmBookingById(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const { id } = req.params;
       // TODO: Validate booking ownership and confirm booking in DB
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: `Booking ${id} confirmed successfully`,
         data: { bookingId: id, status: 'CONFIRMED' }
       });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to confirm booking', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to confirm booking', error: err.message });
     }
   }
 };

@@ -24,42 +24,46 @@ export const UserAuthController = {
   /**
    * Register a new user
    */
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
 
       // 基本输入验证
       if (!email || !password) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Email and password are required'
         });
+        return;
       }
 
       // 验证邮箱格式
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid email format'
         });
+        return;
       }
 
       // 验证密码强度
       if (!isPasswordStrong(password)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Password must be at least 8 characters long and contain both letters and numbers'
         });
+        return;
       }
 
       // 检查邮箱是否已存在
       const existingUser = await userRepo.findOne({ where: { email } });
       if (existingUser) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Email already registered'
         });
+        return;
       }
 
       // 加密密码
@@ -83,7 +87,7 @@ export const UserAuthController = {
         role: user.role
       });
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         message: 'Registration successful',
         data: {
@@ -98,7 +102,7 @@ export const UserAuthController = {
       });
     } catch (err: unknown) {
       console.error('Error registering user:', err);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to register user',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -109,34 +113,37 @@ export const UserAuthController = {
   /**
    * Login user
    */
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
 
       // 基本输入验证
       if (!email || !password) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Email and password are required'
         });
+        return;
       }
 
       // 查找用户
       const user = await userRepo.findOne({ where: { email } });
       if (!user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
+        return;
       }
 
       // 验证密码
       const isValidPassword = await bcryptjs.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
+        return;
       }
 
       // 生成 JWT token
@@ -150,7 +157,7 @@ export const UserAuthController = {
       user.lastLogin = new Date();
       await userRepo.save(user);
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Login successful',
         data: {
@@ -165,7 +172,7 @@ export const UserAuthController = {
       });
     } catch (err: unknown) {
       console.error('Error logging in:', err);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to login',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -176,7 +183,7 @@ export const UserAuthController = {
   /**
    * Request password reset
    */
-  async requestPasswordReset(req: Request, res: Response) {
+  async requestPasswordReset(req: Request, res: Response): Promise<void> {
     try {
       const validatedData = resetPasswordRequestSchema.parse(req.body);
       const { email } = validatedData;
@@ -184,10 +191,11 @@ export const UserAuthController = {
       const user = await userRepo.findOne({ where: { email } });
       if (!user) {
         // Return success even if user doesn't exist for security
-        return res.status(200).json({
+        res.status(200).json({
           success: true,
           message: 'If an account exists with this email, you will receive a password reset link'
         });
+        return;
       }
 
       // Generate reset token
@@ -195,20 +203,20 @@ export const UserAuthController = {
 
       // TODO: Send password reset email
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'If an account exists with this email, you will receive a password reset link'
       });
     } catch (err: unknown) {
       console.error('Error requesting password reset:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to process password reset request',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -229,10 +237,11 @@ export const UserAuthController = {
 
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid or expired reset token'
         });
+        return;
       }
 
       // Hash new password
@@ -242,20 +251,20 @@ export const UserAuthController = {
       user.password = hashedPassword;
       await userRepo.save(user);
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Password has been reset successfully'
       });
     } catch (err: unknown) {
       console.error('Error resetting password:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to reset password',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -276,30 +285,31 @@ export const UserAuthController = {
 
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid or expired verification token'
         });
+        return;
       }
 
       // Update email verification status
       user.isVerified = true;
       await userRepo.save(user);
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Email verified successfully'
       });
     } catch (err: unknown) {
       console.error('Error verifying email:', err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to verify email',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -314,18 +324,19 @@ export const UserAuthController = {
     try {
       const { to, subject, content } = req.body;
       if (!to || !subject || !content) {
-        return res.status(400).json({ success: false, message: 'Missing required fields', error: null });
+        res.status(400).json({ success: false, message: 'Missing required fields', error: null });
+        return;
       }
       // TODO: Integrate with real email service
       // For now, just log the email
       console.log('Simulated email sent:', { to, subject, content });
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Email notification sent (simulated)',
         data: { to, subject }
       });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to send email notification', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to send email notification', error: err.message });
     }
   },
 
@@ -336,16 +347,18 @@ export const UserAuthController = {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found', error: null });
+        res.status(404).json({ success: false, message: 'User not found', error: null });
+        return;
       }
       const { password, ...userData } = user;
-      return res.status(200).json({ success: true, message: 'User profile retrieved', data: userData });
+      res.status(200).json({ success: true, message: 'User profile retrieved', data: userData });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to get profile', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to get profile', error: err.message });
     }
   },
 
@@ -356,12 +369,14 @@ export const UserAuthController = {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const { name, firstName, lastName, avatar } = req.body;
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found', error: null });
+        res.status(404).json({ success: false, message: 'User not found', error: null });
+        return;
       }
       if (name !== undefined) user.name = name;
       if (firstName !== undefined) user.firstName = firstName;
@@ -369,9 +384,9 @@ export const UserAuthController = {
       if (avatar !== undefined) user.avatar = avatar;
       await userRepo.save(user);
       const { password, ...userData } = user;
-      return res.status(200).json({ success: true, message: 'Profile updated', data: userData });
+      res.status(200).json({ success: true, message: 'Profile updated', data: userData });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to update profile', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to update profile', error: err.message });
     }
   },
 
@@ -382,25 +397,29 @@ export const UserAuthController = {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        res.status(401).json({ success: false, message: 'Authentication required', error: null });
+        return;
       }
       const { oldPassword, newPassword } = req.body;
       if (!oldPassword || !newPassword) {
-        return res.status(400).json({ success: false, message: 'Missing oldPassword or newPassword', error: null });
+        res.status(400).json({ success: false, message: 'Missing oldPassword or newPassword', error: null });
+        return;
       }
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found', error: null });
+        res.status(404).json({ success: false, message: 'User not found', error: null });
+        return;
       }
       const isValid = await bcryptjs.compare(oldPassword, user.password);
       if (!isValid) {
-        return res.status(400).json({ success: false, message: 'Old password is incorrect', error: null });
+        res.status(400).json({ success: false, message: 'Old password is incorrect', error: null });
+        return;
       }
       user.password = await bcryptjs.hash(newPassword, 10);
       await userRepo.save(user);
-      return res.status(200).json({ success: true, message: 'Password changed successfully', data: null });
+      res.status(200).json({ success: true, message: 'Password changed successfully', data: null });
     } catch (err: any) {
-      return res.status(500).json({ success: false, message: 'Failed to change password', error: err.message });
+      res.status(500).json({ success: false, message: 'Failed to change password', error: err.message });
     }
   }
 };

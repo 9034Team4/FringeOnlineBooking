@@ -6,7 +6,7 @@ export const VenueController = {
   /**
    * Get all venues
    */
-  async getAll(req: Request, res: Response) {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Ensure admin is authenticated
       
@@ -22,14 +22,14 @@ export const VenueController = {
         }
       ];
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Venues retrieved successfully',
         data: mockVenues
       });
     } catch (err: unknown) {
       console.error(err);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to fetch venues',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -40,7 +40,7 @@ export const VenueController = {
   /**
    * Create a new venue
    */
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Ensure admin is authenticated
       const validatedData = venueCreateSchema.parse(req.body);
@@ -52,7 +52,7 @@ export const VenueController = {
         createdAt: new Date().toISOString()
       };
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         message: 'Venue created successfully',
         data: mockVenue
@@ -60,13 +60,14 @@ export const VenueController = {
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
+        return;
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to create venue',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -77,7 +78,7 @@ export const VenueController = {
   /**
    * Get venue details by ID
    */
-  async getById(req: Request, res: Response) {
+  async getById(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Ensure admin is authenticated
       const { id } = req.params;
@@ -92,14 +93,14 @@ export const VenueController = {
         facilities: ['Parking', 'Wheelchair Access']
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Venue retrieved successfully',
         data: mockVenue
       });
     } catch (err: unknown) {
       console.error(err);
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Venue not found',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -110,7 +111,7 @@ export const VenueController = {
   /**
    * Update an existing venue
    */
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Ensure admin is authenticated
       const { id } = req.params;
@@ -123,7 +124,7 @@ export const VenueController = {
         updatedAt: new Date().toISOString()
       };
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Venue updated successfully',
         data: mockUpdatedVenue
@@ -131,13 +132,14 @@ export const VenueController = {
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof ZodError) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Invalid input data',
           error: err.message
         });
+        return;
       }
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to update venue',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
@@ -148,20 +150,20 @@ export const VenueController = {
   /**
    * Delete a venue
    */
-  async remove(req: Request, res: Response) {
+  async remove(req: Request, res: Response): Promise<void> {
     try {
       // TODO: Ensure admin is authenticated
       const { id } = req.params;
       
       // TODO: DB integration - Delete venue
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Venue deleted successfully',
         data: { id }
       });
     } catch (err: unknown) {
       console.error(err);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to delete venue',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
