@@ -1,4 +1,3 @@
-# Build Stage
 FROM node:18-alpine as build-stage
 
 WORKDIR /app
@@ -9,7 +8,6 @@ RUN npm install
 COPY . ./
 RUN npm run build
 
-# Production Stage
 FROM nginx:alpine as production-stage
 
 COPY --from=build-stage /app/dist /usr/share/nginx/html

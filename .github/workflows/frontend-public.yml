@@ -8,13 +8,32 @@ on:
       - '.github/workflows/frontend-public.yml'
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Get latest commit message
+        id: get_commit
+        run: echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
+      - name: Set up Node.js
+        if: contains(steps.get_commit.outputs.message, '#test-public') || contains(steps.get_commit.outputs.message, '#deploy-public')
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies and run tests
+        if: contains(steps.get_commit.outputs.message, '#test-public') || contains(steps.get_commit.outputs.message, '#deploy-public')
+        working-directory: frontend-public
+        run: |
+          npm ci
+          npm run test
+
       - name: SSH to EC2 and deploy Public Frontend
+        if: contains(steps.get_commit.outputs.message, '#deploy-public')
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -22,7 +41,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/fringeonlinebooking
-                        
+
             git fetch origin
             git checkout dev
             git pull origin dev

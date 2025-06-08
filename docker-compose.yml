@@ -51,7 +51,7 @@ services:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: fringe2025bookingdb_dev
       MYSQL_USER: root
-      MYSQL_PASSWORD:
+      MYSQL_PASSWORD: 12345678
     ports:
       - "3306:3306"
     volumes:
