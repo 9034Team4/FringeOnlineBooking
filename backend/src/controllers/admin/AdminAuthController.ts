@@ -30,7 +30,7 @@ export const AdminAuthController = {
       if (!admin) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: 'Invalid credential'
         });
       }
 
