@@ -20,7 +20,7 @@
     "@babel/core": "^7.26.10",
     "@babel/eslint-parser": "^7.27.0",
     "@babel/plugin-syntax-jsx": "^7.25.9",
-    "@babel/preset-env": "^7.28.2",
+    "@babel/preset-env": "^7.22.20",
     "@testing-library/vue": "^8.0.1",
     "@vue/babel-plugin-jsx": "^1.4.0",
     "@vue/cli-plugin-babel": "^5.0.8",
