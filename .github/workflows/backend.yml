@@ -47,17 +47,27 @@ jobs:
           script: |
             cd /home/ec2-user
 
-            mkdir -p /home/ec2-user/envs
-            echo "${{ secrets.BACKEND_ENV }}" > /home/ec2-user/envs/backend.env
+            # ✅ 保证 .env 文件夹存在
+            mkdir -p envs
+            echo "${{ secrets.BACKEND_ENV }}" > envs/backend.env
 
+            # ✅ 如果项目目录不存在则克隆
             if [ ! -d "fringeonlinebooking/.git" ]; then
               git clone https://github.com/9034Team4/FringeOnlineBooking.git fringeonlinebooking
             fi
 
             cd fringeonlinebooking
-            git fetch origin
-            git checkout dev
-            git pull origin dev
 
+            # ✅ 确保是 Git 仓库，且已经是正确分支
+            if [ -d ".git" ]; then
+              git fetch origin
+              git checkout dev
+              git pull origin dev
+            else
+              echo "❌ Not a Git repository!"
+              exit 1
+            fi
+
+            # ✅ 构建并启动 backend 服务
             docker-compose build backend
             docker-compose up -d backend
