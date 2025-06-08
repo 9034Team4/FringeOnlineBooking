@@ -295,6 +295,22 @@ router.post('/tickets', authenticateJWT, async (req, res) => {
 
 /**
  * @swagger
+ * /tickets/user:
+ *   get:
+ *     summary: Get all tickets for the current user
+ *     tags: [Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's tickets returned
+ */
+router.get('/tickets/user', authenticateJWT, async (req, res) => {
+  await TicketController.getUserTickets(req, res);
+});
+
+/**
+ * @swagger
  * /tickets/{id}:
  *   get:
  *     summary: Get ticket details
@@ -313,22 +329,6 @@ router.post('/tickets', authenticateJWT, async (req, res) => {
  */
 router.get('/tickets/:id', authenticateJWT, async (req, res) => {
   await TicketController.getTicketDetails(req, res);
-});
-
-/**
- * @swagger
- * /tickets/user:
- *   get:
- *     summary: Get all tickets for the current user
- *     tags: [Tickets]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User's tickets returned
- */
-router.get('/tickets/user', authenticateJWT, async (req, res) => {
-  await TicketController.getUserTickets(req, res);
 });
 
 /**
@@ -533,9 +533,9 @@ router.get('/api/tickets/validate/:ticketId', authenticateJWT, async (req, res) 
 
 /**
  * @swagger
- * /api/seats/select:
+ * /seats/select:
  *   post:
- *     summary: Select a seat for an event
+ *     summary: (Deprecated) Select a seat for an event
  *     tags: [Seats]
  *     security:
  *       - bearerAuth: []
@@ -545,27 +545,26 @@ router.get('/api/tickets/validate/:ticketId', authenticateJWT, async (req, res) 
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - eventId
- *               - seatNumber
  *             properties:
  *               eventId:
  *                 type: string
- *               seatNumber:
- *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
  *     responses:
  *       200:
- *         description: Seat selected and reserved temporarily
+ *         description: Seat selected
  */
-router.post('/api/seats/select', authenticateJWT, async (req, res) => {
-  await SeatController.selectSeat(req, res);
+router.post('/seats/select', authenticateJWT, (req, res) => {
+  return SeatController.lockSeats(req, res);
 });
 
 /**
  * @swagger
- * /api/seats/lock:
+ * /seats/lock-seat:
  *   post:
- *     summary: Lock a seat for a period
+ *     summary: (Deprecated) Lock a seat for a period
  *     tags: [Seats]
  *     security:
  *       - bearerAuth: []
@@ -575,27 +574,26 @@ router.post('/api/seats/select', authenticateJWT, async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - eventId
- *               - seatNumber
  *             properties:
  *               eventId:
  *                 type: string
- *               seatNumber:
- *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
  *     responses:
  *       200:
- *         description: Seat locked for a period
+ *         description: Seat locked successfully
  */
-router.post('/api/seats/lock', authenticateJWT, async (req, res) => {
-  await SeatController.lockSeat(req, res);
+router.post('/seats/lock-seat', authenticateJWT, (req, res) => {
+  return SeatController.lockSeats(req, res);
 });
 
 /**
  * @swagger
- * /api/seats/release:
+ * /seats/release:
  *   post:
- *     summary: Release a seat if not paid/confirmed
+ *     summary: (Deprecated) Release a seat manually
  *     tags: [Seats]
  *     security:
  *       - bearerAuth: []
@@ -605,20 +603,23 @@ router.post('/api/seats/lock', authenticateJWT, async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - eventId
- *               - seatNumber
  *             properties:
  *               eventId:
  *                 type: string
- *               seatNumber:
- *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
  *     responses:
  *       200:
  *         description: Seat released
  */
-router.post('/api/seats/release', authenticateJWT, async (req, res) => {
-  await SeatController.releaseSeat(req, res);
+router.post('/seats/release', authenticateJWT, (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: 'This endpoint is deprecated. Seats are automatically released after timeout or can be released by admin.',
+    data: null
+  });
 });
 
 /**
@@ -1121,6 +1122,261 @@ router.delete('/admin/events/:id', authenticateJWT, authorizeRole(UserRole.ADMIN
   EventController.remove(req, res);
 });
 
-// (Other admin endpoints can follow the same pattern with security tag)
+// ================= Admin Seat Management =================
+/**
+ * @swagger
+ * /admin/venues/{venueId}/seats:
+ *   get:
+ *     summary: Get all seats for a venue
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: venueId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Venue ID
+ *     responses:
+ *       200:
+ *         description: List of venue seats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       seatNumber:
+ *                         type: string
+ *                       row:
+ *                         type: string
+ *                       section:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                       type:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ */
+router.get(
+  '/admin/venues/:venueId/seats',
+  authenticateJWT,
+  authorizeRole(UserRole.ADMIN),
+  (req, res) => {
+    return SeatController.getByVenue(req, res);
+  }
+);
+
+/**
+ * @swagger
+ * /admin/seats:
+ *   post:
+ *     summary: Create a new seat
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               venueId:
+ *                 type: string
+ *               section:
+ *                 type: string
+ *               row:
+ *                 type: string
+ *               number:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [standard, vip, wheelchair]
+ *               price:
+ *                 type: number
+ *               eventId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Seat created successfully
+ */
+router.post(
+  '/admin/seats',
+  authenticateJWT,
+  authorizeRole(UserRole.ADMIN),
+  (req, res) => {
+    return SeatController.create(req, res);
+  }
+);
+
+// ================= Event Seat Booking =================
+/**
+ * @swagger
+ * /events/{eventId}/seats:
+ *   get:
+ *     summary: Get all available seats for an event
+ *     tags: [Seats]
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID
+ *     responses:
+ *       200:
+ *         description: List of available seats
+ */
+router.get('/events/:eventId/seats', (req, res) => {
+  return SeatController.getAvailableSeats(req, res);
+});
+
+/**
+ * @swagger
+ * /seats/lock:
+ *   post:
+ *     summary: Lock seats for booking
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *     responses:
+ *       200:
+ *         description: Seats locked successfully
+ */
+router.post('/seats/lock', authenticateJWT, (req, res) => {
+  return SeatController.lockSeats(req, res);
+});
+
+/**
+ * @swagger
+ * /seats/confirm:
+ *   post:
+ *     summary: Confirm seat booking after payment
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *     responses:
+ *       200:
+ *         description: Seats confirmed successfully
+ */
+router.post('/seats/confirm', authenticateJWT, (req, res) => {
+  return SeatController.confirmBooking(req, res);
+});
+
+/**
+ * @swagger
+ * /admin/seats/release-expired:
+ *   post:
+ *     summary: Release expired seat locks
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Expired seats released successfully
+ */
+router.post(
+  '/admin/seats/release-expired',
+  authenticateJWT,
+  authorizeRole(UserRole.ADMIN),
+  (req, res) => {
+    return SeatController.releaseExpiredLocks(req, res);
+  }
+);
+
+/**
+ * @swagger
+ * /seats/release-locks:
+ *   post:
+ *     summary: User releases their own locked seats
+ *     tags: [Seats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *               seatIds:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *     responses:
+ *       200:
+ *         description: User's locked seats released successfully
+ */
+router.post('/seats/release-locks', authenticateJWT, (req, res) => {
+  return SeatController.releaseUserLocks(req, res);
+});
+
+/**
+ * @swagger
+ * /seats/lock-status:
+ *   get:
+ *     summary: Get seat lock status
+ *     tags: [Seats]
+ *     parameters:
+ *       - in: query
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Event ID
+ *       - in: query
+ *         name: seatIds
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Comma-separated seat IDs
+ *     responses:
+ *       200:
+ *         description: Seat lock status retrieved successfully
+ */
+router.get('/seats/lock-status', (req, res) => {
+  return SeatController.getLockStatus(req, res);
+});
 
 export default router;

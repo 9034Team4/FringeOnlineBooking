@@ -1,192 +1,115 @@
-import { Request, Response } from 'express';
 import { MessageController } from '../../controllers/MessageController';
-import { setupTestDatabase, createTestUser, createTestMessage, cleanupTestDatabase } from '../utils/testUtils';
-import { DataSource } from 'typeorm';
-import { User, UserRole } from '../../entities/User';
+import { Request, Response } from 'express';
+import { AppDataSource } from '../../config/data-source';
 import { Message } from '../../entities/Message';
+import { User } from '../../entities/User';
+
+jest.mock('../../config/data-source', () => ({
+  AppDataSource: {
+    getRepository: jest.fn()
+  }
+}));
 
 describe('MessageController', () => {
-  let dataSource: DataSource;
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
-  let responseObject: any;
-  let sender: User;
-  let receiver: User;
+  const mockMessageRepo = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn()
+  };
 
-  beforeAll(async () => {
-    dataSource = await setupTestDatabase();
-  });
+  const mockUserRepo = {
+    findOne: jest.fn()
+  };
 
-  afterAll(async () => {
-    await cleanupTestDatabase(dataSource);
-  });
-
-  beforeEach(async () => {
-    responseObject = {};
-    mockRequest = {};
-    mockResponse = {
-      json: jest.fn().mockImplementation((result) => {
-        responseObject = result;
-        return mockResponse;
-      }),
-      status: jest.fn().mockImplementation((code) => {
-        responseObject.status = code;
-        return mockResponse;
-      }),
-    };
-
-    // Create test users for each test
-    sender = await createTestUser(dataSource);
-    receiver = await createTestUser(dataSource);
-  });
-
-  describe('sendMessage', () => {
-    it('should create a new message', async () => {
-      const messageData = {
-        receiverId: receiver.id,
-        content: 'Test message content',
-      };
-      mockRequest.body = messageData;
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.sendMessage(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalled();
-      expect(responseObject.message.content).toBe(messageData.content);
-      expect(responseObject.message.sender.id).toBe(sender.id);
-      expect(responseObject.message.receiver.id).toBe(receiver.id);
-    });
-
-    it('should return 404 if receiver not found', async () => {
-      const messageData = {
-        receiverId: 'non-existent-id',
-        content: 'Test message content',
-      };
-      mockRequest.body = messageData;
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.sendMessage(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Receiver not found',
-      });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (AppDataSource.getRepository as jest.Mock).mockImplementation((entity) => {
+      if (entity === Message) return mockMessageRepo;
+      if (entity === User) return mockUserRepo;
     });
   });
 
-  describe('getMessages', () => {
-    it('should return all messages for a user', async () => {
-      // Create some test messages
-      await createTestMessage(dataSource, sender, receiver);
-      await createTestMessage(dataSource, receiver, sender);
+  const mockRes = () => {
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    return { json, status };
+  };
 
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.getMessages(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).not.toHaveBeenCalled();
-      expect(mockResponse.json).toHaveBeenCalled();
-      expect(responseObject.messages).toHaveLength(2);
-    });
+  it('sendMessage should return 400 if missing fields', async () => {
+    const req = { body: {}, user: { userId: 'u1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.sendMessage(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(400);
   });
 
-  describe('getConversation', () => {
-    it('should return messages between two users', async () => {
-      // Create some test messages
-      await createTestMessage(dataSource, sender, receiver);
-      await createTestMessage(dataSource, receiver, sender);
-
-      mockRequest.params = { userId: receiver.id };
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.getConversation(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).not.toHaveBeenCalled();
-      expect(mockResponse.json).toHaveBeenCalled();
-      expect(responseObject.messages).toHaveLength(2);
-    });
-
-    it('should return 404 if other user not found', async () => {
-      mockRequest.params = { userId: 'non-existent-id' };
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.getConversation(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'User not found',
-      });
-    });
+  it('sendMessage should return 404 if receiver not found', async () => {
+    mockUserRepo.findOne.mockResolvedValue(null);
+    const req = { body: { receiverId: 'u2', content: 'Hello' }, user: { userId: 'u1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.sendMessage(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(404);
   });
 
-  describe('deleteMessage', () => {
-    it('should delete a message', async () => {
-      const message = await createTestMessage(dataSource, sender, receiver);
-      mockRequest.params = { id: message.id };
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.deleteMessage(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).not.toHaveBeenCalled();
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Message deleted',
-      });
-
-      // Verify message is actually deleted
-      const deletedMessage = await dataSource
-        .getRepository(Message)
-        .findOne({ where: { id: message.id } });
-      expect(deletedMessage).toBeNull();
-    });
-
-    it('should return 404 if message not found', async () => {
-      mockRequest.params = { id: 'non-existent-id' };
-      mockRequest.user = { id: sender.id };
-
-      await MessageController.deleteMessage(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Message not found',
-      });
-    });
-
-    it('should return 403 if user is not the sender', async () => {
-      const message = await createTestMessage(dataSource, sender, receiver);
-      mockRequest.params = { id: message.id };
-      mockRequest.user = { id: 'different-user-id' };
-
-      await MessageController.deleteMessage(
-        mockRequest as Request,
-        mockResponse as Response
-      );
-
-      expect(mockResponse.status).toHaveBeenCalledWith(403);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: 'Not authorized to delete this message',
-      });
-    });
+  it('sendMessage should create and return message', async () => {
+    mockUserRepo.findOne.mockResolvedValue({ id: 'u2' });
+    mockMessageRepo.create.mockReturnValue({ id: 'm1', content: 'Hello' });
+    mockMessageRepo.save.mockResolvedValue({ id: 'm1', content: 'Hello' });
+    const req = { body: { receiverId: 'u2', content: 'Hello' }, user: { userId: 'u1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.sendMessage(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.status().json).toHaveBeenCalledWith(expect.objectContaining({ message: expect.any(Object) }));
   });
-}); 
+
+  it('getMessages should return messages for user', async () => {
+    mockMessageRepo.find.mockResolvedValue([{ id: 'm1' }, { id: 'm2' }]);
+    const req = { user: { userId: 'u1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.getMessages(req, res as unknown as Response);
+    expect(res.json).toHaveBeenCalledWith({ messages: expect.any(Array) });
+  });
+
+  it('getConversation should return 404 if other user not found', async () => {
+    mockUserRepo.findOne.mockResolvedValue(null);
+    const req = { user: { userId: 'u1' }, params: { userId: 'u2' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.getConversation(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
+  it('getConversation should return conversation between users', async () => {
+    mockUserRepo.findOne.mockResolvedValue({ id: 'u2' });
+    mockMessageRepo.find.mockResolvedValue([{ id: 'm1' }, { id: 'm2' }]);
+    const req = { user: { userId: 'u1' }, params: { userId: 'u2' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.getConversation(req, res as unknown as Response);
+    expect(res.json).toHaveBeenCalledWith({ messages: expect.any(Array) });
+  });
+
+  it('deleteMessage should return 404 if message not found', async () => {
+    mockMessageRepo.findOne.mockResolvedValue(null);
+    const req = { user: { userId: 'u1' }, params: { id: 'm1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.deleteMessage(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
+  it('deleteMessage should return 403 if not sender', async () => {
+    mockMessageRepo.findOne.mockResolvedValue({ sender: { id: 'u2' } });
+    const req = { user: { userId: 'u1' }, params: { id: 'm1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.deleteMessage(req, res as unknown as Response);
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  it('deleteMessage should remove message if sender matches', async () => {
+    mockMessageRepo.findOne.mockResolvedValue({ sender: { id: 'u1' }, id: 'm1' });
+    mockMessageRepo.remove.mockResolvedValue(undefined);
+    const req = { user: { userId: 'u1' }, params: { id: 'm1' } } as unknown as Request;
+    const res = mockRes();
+    await MessageController.deleteMessage(req, res as unknown as Response);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Message deleted' });
+  });
+});

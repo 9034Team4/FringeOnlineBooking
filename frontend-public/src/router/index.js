@@ -61,8 +61,27 @@ const routes = [
     path: '/venue',
     name: 'VenueDetails',
     component: () => import('@/views/VenueDetailsPage.vue')
+  },
+  {
+    path: '/events/:eventId/seats',
+    name: 'seat-selection',
+    component: () => import('@/views/SeatSelectionPage.vue')
+  },
+  {
+    path: '/events/:eventId/payment',
+    name: 'payment',
+    component: () => import('@/views/PaymentPage.vue')
+  },
+  {
+    path: '/events/:eventId/confirmation',
+    name: 'booking-confirmation',
+    component: () => import('@/views/BookingConfirmationPage.vue')
+  },
+  {
+    path: '/my-tickets',
+    name: 'my-tickets',
+    component: () => import('@/views/TicketView.vue')
   }
-
 ]
 
 const router = createRouter({

@@ -15,7 +15,7 @@ export const AdminAuthController = {
   async login(req: Request, res: Response) {
     try {
       const validatedData = adminLoginSchema.parse(req.body);
-      
+      console.log('validatedData',validatedData);
       // Find admin user by email
       const admin = await userRepo.findOne({ 
         where: { 
@@ -24,6 +24,8 @@ export const AdminAuthController = {
           isActive: true
         } 
       });
+
+      console.log('admin',admin);
 
       if (!admin) {
         return res.status(401).json({

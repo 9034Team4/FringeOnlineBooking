@@ -40,6 +40,21 @@ export const seatCreateSchema = z.object({
   number: z.string(),
   type: z.enum(['standard', 'vip', 'wheelchair']),
   price: z.number().positive(),
+  eventId: z.string().uuid().optional(),
+});
+
+export const getAvailableSeatsSchema = z.object({
+  eventId: z.string().uuid(),
+});
+
+export const lockSeatsSchema = z.object({
+  eventId: z.string().uuid(),
+  seatIds: z.array(z.number()),
+});
+
+export const confirmBookingSchema = z.object({
+  eventId: z.string().uuid(),
+  seatIds: z.array(z.number()),
 });
 
 // Ticket Admin Schemas

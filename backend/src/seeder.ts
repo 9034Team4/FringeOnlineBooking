@@ -6,9 +6,35 @@ import { Ticket, TicketType, TicketStatus } from './entities/Ticket';
 import { Payment } from './entities/Payment';
 import { EventCategory } from './entities/EventCategory';
 import { Venue } from './entities/Venue';
+import bcryptjs from 'bcryptjs';
+
+async function clearData() {
+  console.log('🗑️  Clearing existing data...');
+  
+  // Disable foreign key checks
+  await AppDataSource.query('SET FOREIGN_KEY_CHECKS = 0;');
+  
+  try {
+    // Clear all tables using direct SQL
+    await AppDataSource.query('TRUNCATE TABLE payment;');
+    await AppDataSource.query('TRUNCATE TABLE ticket;');
+    await AppDataSource.query('TRUNCATE TABLE booking;');
+    await AppDataSource.query('TRUNCATE TABLE event;');
+    await AppDataSource.query('TRUNCATE TABLE user;');
+    await AppDataSource.query('TRUNCATE TABLE venue;');
+    await AppDataSource.query('TRUNCATE TABLE event_category;');
+    console.log('✅ Data cleared successfully');
+  } finally {
+    // Re-enable foreign key checks
+    await AppDataSource.query('SET FOREIGN_KEY_CHECKS = 1;');
+  }
+}
 
 async function seed() {
   await AppDataSource.initialize();
+  
+  // Clear existing data first
+  await clearData();
 
   // 0. 插入一个 EventCategory 和 Venue 供外键使用
   const category = new EventCategory();
@@ -25,9 +51,10 @@ async function seed() {
   for (let i = 0; i < 30; i++) {
     const user = new User();
     user.email = `user${i}@test.com`;
-    user.password = 'password'; // 真实项目请加密
+    user.password = await bcryptjs.hash('password', 10); // Hash the password
     user.role = i < 3 ? UserRole.ADMIN : UserRole.USER;
     user.name = `User${i}`;
+    user.isActive = true;
     users.push(user);
   }
   await AppDataSource.getRepository(User).save(users);

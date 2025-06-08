@@ -8,7 +8,32 @@ on:
       - '.github/workflows/backend.yml'
 
 jobs:
+  test:
+    if: contains(github.event.head_commit.message, '#test-backend') || contains(github.event.head_commit.message, '#deploy-backend')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm install
+
+      - name: Run tests
+        run: |
+          cd backend
+          npm run test
+        # ✅ 确保 jest 的测试脚本存在并正确配置（例如：npm run test）
+
   deploy:
+    needs: test
+    if: contains(github.event.head_commit.message, '#deploy-backend')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,17 +48,14 @@ jobs:
           script: |
             cd /home/ec2-user
 
-            # Upload or update backend.env from GitHub secret
             mkdir -p /home/ec2-user/envs
             echo "${{ secrets.BACKEND_ENV }}" > /home/ec2-user/envs/backend.env
 
-            # Clone the repo if it's not already present
             if [ ! -d "fringeonlinebooking/.git" ]; then
               git clone https://github.com/9034Team4/FringeOnlineBooking.git fringeonlinebooking
             fi
 
             cd fringeonlinebooking
-
             git fetch origin
             git checkout dev
             git pull origin dev

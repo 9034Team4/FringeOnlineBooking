@@ -7,6 +7,8 @@ import {
   ManyToOne,
   OneToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn
 } from 'typeorm';
 import { User } from './User';
 import { Ticket } from './Ticket';
@@ -40,4 +42,10 @@ export class Payment {
 
   @Column()
   timestamp!: Date;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

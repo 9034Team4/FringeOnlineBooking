@@ -44,6 +44,12 @@ const routes = [
         component: () => import('@/views/StaffPage.vue'),
         meta: { requiresAuth: true }
       },
+      {
+        path: 'seats',
+        name: 'seat-management',
+        component: () => import('@/views/SeatManagementPage.vue'),
+        meta: { requiresAuth: true }
+      },
     ]
   },
   {

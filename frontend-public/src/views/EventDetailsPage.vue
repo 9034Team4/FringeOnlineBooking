@@ -1,71 +1,89 @@
 <template>
   <div class="event-details-container">
-    <div class="event-header">
-      <img src="@/assets/images/event-0.png" alt="Event Banner" class="event-banner" />
-      <div class="event-header-info">
-        <h1>John Pedder: Woodblock Prints</h1>
-        <div class="event-info-box">
-          <p class="event-datetime">Saturday, March 18 2023, 9:30PM</p>
-          <button class="book-btn" @click="goToBooking">Book now</button>
-          <button class="secondary-btn" @click="goToVenue">Venue Information</button>
-          <p class="refund-info">No Refunds</p>
-        </div>
+    <div v-if="loading" class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">正在加载活动信息...</p>
+    </div>
+    
+    <div v-else-if="error" class="error-container">
+      <div class="alert alert-danger">
+        {{ error }}
       </div>
     </div>
-
-    <div class="event-content">
-      <div class="left-column">
-        <h2>Adelaide Oval</h2>
-        <p class="description">
-          DesignHub organized a 3D Modeling Workshop using Blender on 16th February at 5 PM...
-        </p>
-
-        <h3>Description</h3>
-        <p>
-          DesignHub organized a 3D Modeling Workshop using Blender on 16th February at 5 PM...
-        </p>
-
-        <h3>Hours</h3>
-        <p>Weekdays hour: <strong>7PM - 10PM</strong></p>
-        <p>Sunday hour: <strong>7PM - 10PM</strong></p>
-
-        <h3>Organizer Contact</h3>
-        <p>Please go to <a href="#">www.sneakypeeks.com</a> and refer the FAQ section for more detail</p>
-      </div>
-
-      <div class="right-column">
-        <h3>Event location</h3>
-        <GMapMap
-          :center="{ lat: -34.9285, lng: 138.6007 }"
-          :zoom="14"
-          style="width: 100%; height: 300px"
-        >
-          <GMapMarker :position="{ lat: -34.9285, lng: 138.6007 }" />
-        </GMapMap>
-        <p><strong>Dream world wide in jakatra</strong></p>
-        <p>Dummy Location generation model by RSU ... Our approach generates more realistic dummy locations</p>
-
-        <h3>Tags</h3>
-        <div class="tags">
-          <span class="tag">Indonesia event</span>
-          <span class="tag">Jaskaran event</span>
-          <span class="tag">UI</span>
-          <span class="tag">Seminar</span>
-        </div>
-
-        <h3>Share with friends</h3>
-        <div class="social-icons">
-          <img src="@/assets/logos/google.png" alt="Facebook" />
-          <img src="@/assets/logos/spotify.png" alt="WhatsApp" />
-          <img src="@/assets/logos/youtube.png" alt="LinkedIn" />
-          <img src="@/assets/logos/zoom.png" alt="Twitter" />
+    
+    <div v-else>
+      <div class="event-header">
+        <img :src="event.coverImage || '@/assets/images/event-0.png'" alt="Event Banner" class="event-banner" />
+        <div class="event-header-info">
+          <h1>{{ event.title }}</h1>
+          <div class="event-info-box">
+            <p class="event-datetime">{{ formatDate(event.startDate) }}</p>
+            <button class="book-btn" @click="goToSeatSelection">选座购票</button>
+            <button class="secondary-btn" @click="goToVenue">场馆信息</button>
+            <p class="refund-info">{{ event.refundPolicy || '不支持退款' }}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="related-events">
-      <h2>Other events you may like</h2>
-      <Upcoming/>
+      <div class="event-content">
+        <div class="left-column">
+          <h2>{{ event.venue?.name }}</h2>
+          <p class="description">
+            {{ event.shortDescription }}
+          </p>
+
+          <h3>活动详情</h3>
+          <div v-html="event.description"></div>
+
+          <h3>活动时间</h3>
+          <p>开始时间: <strong>{{ formatTime(event.startDate) }}</strong></p>
+          <p>结束时间: <strong>{{ formatTime(event.endDate) }}</strong></p>
+
+          <h3>组织者联系方式</h3>
+          <p>{{ event.organizerContact || '请访问活动主页获取更多信息' }}</p>
+        </div>
+
+        <div class="right-column">
+          <h3>活动地点</h3>
+          <GMapMap
+            :center="mapCenter"
+            :zoom="14"
+            style="width: 100%; height: 300px"
+          >
+            <GMapMarker :position="mapCenter" />
+          </GMapMap>
+          <p><strong>{{ event.venue?.name }}</strong></p>
+          <p>{{ event.venue?.address }}</p>
+
+          <h3>门票价格</h3>
+          <div class="ticket-prices">
+            <div v-for="(price, type) in event.ticketPrices" :key="type" class="ticket-price-item">
+              <span class="ticket-type">{{ type }}</span>
+              <span class="ticket-price">${{ price.toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <h3>标签</h3>
+          <div class="tags">
+            <span v-for="tag in event.tags" :key="tag" class="tag">{{ tag }}</span>
+          </div>
+
+          <h3>分享给好友</h3>
+          <div class="social-icons">
+            <a href="#" @click.prevent="shareEvent('facebook')"><i class="bi bi-facebook"></i></a>
+            <a href="#" @click.prevent="shareEvent('twitter')"><i class="bi bi-twitter"></i></a>
+            <a href="#" @click.prevent="shareEvent('whatsapp')"><i class="bi bi-whatsapp"></i></a>
+            <a href="#" @click.prevent="shareEvent('linkedin')"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="related-events">
+        <h2>你可能还喜欢</h2>
+        <Upcoming/>
+      </div>
     </div>
   </div>
 </template>
@@ -73,6 +91,8 @@
 <script>
 import Upcoming from '@/components/UpcomingEventFilters.vue'
 import { GMapMap, GMapMarker } from '@fawmi/vue-google-maps'
+import axios from 'axios'
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'EventDetailsPage',
@@ -81,14 +101,125 @@ export default {
     GMapMap,
     GMapMarker
   },
+  setup() {
+    const event = ref({
+      title: '',
+      description: '',
+      shortDescription: '',
+      startDate: null,
+      endDate: null,
+      venue: null,
+      coverImage: '',
+      organizerContact: '',
+      ticketPrices: {},
+      tags: [],
+      refundPolicy: ''
+    })
+    const loading = ref(true)
+    const error = ref(null)
+
+    const mapCenter = computed(() => {
+      if (event.value.venue?.latitude && event.value.venue?.longitude) {
+        return {
+          lat: parseFloat(event.value.venue.latitude),
+          lng: parseFloat(event.value.venue.longitude)
+        }
+      }
+      return { lat: -34.9285, lng: 138.6007 } // Default location
+    })
+
+    const fetchEventDetails = async () => {
+      const eventId = window.location.pathname.split('/').pop()
+      
+      try {
+        loading.value = true
+        const response = await axios.get(`/api/public/events/${eventId}`)
+        
+        if (response.data.success) {
+          event.value = response.data.data
+        } else {
+          error.value = response.data.message
+        }
+      } catch (err) {
+        error.value = err.message || '加载活动详情失败'
+      } finally {
+        loading.value = false
+      }
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      })
+    }
+
+    const formatTime = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    const shareEvent = (platform) => {
+      const url = window.location.href
+      const title = event.value.title
+      
+      let shareUrl = ''
+      
+      switch (platform) {
+        case 'facebook':
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+          break
+        case 'twitter':
+          shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`
+          break
+        case 'whatsapp':
+          shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + url)}`
+          break
+        case 'linkedin':
+          shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+          break
+      }
+      
+      if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400')
+      }
+    }
+
+    onMounted(() => {
+      fetchEventDetails()
+    })
+
+    return {
+      event,
+      loading,
+      error,
+      mapCenter,
+      formatDate,
+      formatTime,
+      shareEvent
+    }
+  },
   methods: {
-    // Navigate to booking confirmation
-    goToBooking() {
-      this.$router.push('/booking-confirmation')
+    // 跳转到座位选择页面
+    goToSeatSelection() {
+      const eventId = this.$route.params.id
+      this.$router.push(`/events/${eventId}/seats`)
     },
-    // Navigate to venue details page
+    // 跳转到场馆详情页面
     goToVenue() {
-      this.$router.push('/venue')
+      if (this.event.venue) {
+        this.$router.push(`/venue/${this.event.venue.id}`)
+      } else {
+        this.$router.push('/venue')
+      }
     }
   }
 }
@@ -100,6 +231,15 @@ export default {
   padding: 20px;
 }
 
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
 .event-header {
   display: flex;
   position: relative;
@@ -108,7 +248,8 @@ export default {
 
 .event-banner {
   width: 100%;
-  height: auto;
+  height: 400px;
+  object-fit: cover;
   border-radius: 8px;
 }
 
@@ -136,6 +277,12 @@ export default {
   margin-bottom: 10px;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.book-btn:hover {
+  background: #d7407c;
 }
 
 .secondary-btn {
@@ -145,6 +292,11 @@ export default {
   border-radius: 6px;
   margin-bottom: 10px;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.secondary-btn:hover {
+  background: #e0e0e0;
 }
 
 .refund-info {
@@ -163,18 +315,29 @@ export default {
 
 h2, h3 {
   margin-top: 20px;
+  margin-bottom: 15px;
 }
 
-.map-img {
-  width: 100%;
-  border-radius: 6px;
-  margin-bottom: 10px;
+.ticket-prices {
+  margin-bottom: 20px;
+}
+
+.ticket-price-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.ticket-price {
+  font-weight: bold;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 20px;
 }
 
 .tag {
@@ -184,12 +347,40 @@ h2, h3 {
   font-size: 12px;
 }
 
-.social-icons img {
-  width: 30px;
-  margin-right: 10px;
+.social-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.social-icons a {
+  font-size: 24px;
+  color: #666;
+  transition: color 0.3s;
+}
+
+.social-icons a:hover {
+  color: #f25c94;
 }
 
 .related-events {
   margin-top: 60px;
+}
+
+@media (max-width: 768px) {
+  .event-content {
+    flex-direction: column;
+  }
+  
+  .event-header-info {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    max-width: 100%;
+    margin-top: 20px;
+  }
+  
+  .event-banner {
+    height: 250px;
+  }
 }
 </style>
