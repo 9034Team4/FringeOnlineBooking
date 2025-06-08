@@ -16,8 +16,6 @@ services:
     build: ./backend
     container_name: backend
     restart: always
-    env_file:
-      - /home/ec2-user/envs/backend.env
     depends_on:
       - mysql
       - redis
@@ -25,6 +23,15 @@ services:
       - mynet
     ports:
       - "3000:3000"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=root123
+      - DB_DATABASE=fringe2025bookingdb_dev
+      - CACHE_HOST=redis
+      - CACHE_PORT=6379
+      - JWT_SECRET=your_jwt_secret
 
   frontend-admin:
     build: ./frontend-admin
