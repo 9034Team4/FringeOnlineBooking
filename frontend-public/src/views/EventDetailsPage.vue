@@ -90,7 +90,7 @@
 
 <script>
 import Upcoming from '@/components/UpcomingEventFilters.vue'
-import { GMapMap, GMapMarker } from '@fawmi/vue-google-maps'
+import { Map as GMapMap, Marker as GMapMarker } from '@fawmi/vue-google-maps'
 import axios from 'axios'
 import { ref, computed, onMounted } from 'vue'
 

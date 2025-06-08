@@ -7,9 +7,9 @@ jest.mock('qrcode', () => ({ toDataURL: jest.fn().mockResolvedValue('mock-qr') }
 jest.mock('uuid', () => ({ v4: () => 'mock-ticket-id' }));
 
 const mockRepository = {
-  findOne: jest.fn(),
-  find: jest.fn(),
-  save: jest.fn(),
+            findOne: jest.fn(),
+            find: jest.fn(),
+            save: jest.fn(),
   create: jest.fn()
 };
 
@@ -141,12 +141,12 @@ describe('TicketService (coverage only)', () => {
   it('cancelTicket: success', async () => {
     const ticket = {
       id: 'tid',
-      isScanned: false,
+                isScanned: false,
       event: { availableCapacity: 0, totalBookings: 1 }
     };
     mockRepository.findOne.mockResolvedValue(ticket);
     mockRepository.save.mockResolvedValue({});
     await service.cancelTicket('tid', 'reason');
     expect(true).toBe(true);
-  });
-});
+            });
+        });

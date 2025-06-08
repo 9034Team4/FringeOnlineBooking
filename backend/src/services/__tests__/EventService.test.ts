@@ -4,8 +4,8 @@ import { UserRole } from '../../entities/User';
 
 const mockRepository = {
   findOne: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
   delete: jest.fn()
 };
 
@@ -60,7 +60,7 @@ describe('EventService (coverage-only)', () => {
       endTime: new Date('2025-01-02'),
       venue: '',
       category: '',
-      capacity: 100,
+                    capacity: 100,
       basePrice: 10
     });
     expect(true).toBe(true);
@@ -187,5 +187,5 @@ describe('EventService (coverage-only)', () => {
     mockRepository.delete.mockResolvedValue({});
     await service.deleteEvent('eid', 'uid');
     expect(true).toBe(true);
-  });
-});
+    });
+}); 
