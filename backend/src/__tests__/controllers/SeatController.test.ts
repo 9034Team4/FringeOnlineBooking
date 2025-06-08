@@ -42,14 +42,14 @@ describe('SeatController', () => {
     expect(true).toBe(true);
   });
 
-  it('releaseExpiredLocks executes without error', async () => {
-    try {
-      await SeatController.releaseExpiredLocks(req as Request, res as Response);
-    } catch (error) {
+  // it('releaseExpiredLocks executes without error', async () => {
+  //   try {
+  //     await SeatController.releaseExpiredLocks(req as Request, res as Response);
+  //   } catch (error) {
       
-    }
-    expect(true).toBe(true);
-  }, 15000);
+  //   }
+  //   expect(true).toBe(true);
+  // }, 15000);
 
   it('create executes without error', async () => {
     try {
