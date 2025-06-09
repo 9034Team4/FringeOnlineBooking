@@ -51,7 +51,7 @@ services:
     ports:
       - "8082:80"
     environment:
-      - API_BASE_URL=http://gateway/api
+      - VITE_API_BASE_URL=http://gateway/api
 
   mysql:
     image: mysql:8
