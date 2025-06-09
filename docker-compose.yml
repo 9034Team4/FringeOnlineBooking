@@ -26,7 +26,7 @@ services:
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USERNAME=root
+      - DB_USER=root
       - DB_PASSWORD=root123
       - DB_DATABASE=fringe2025bookingdb_dev
       - CACHE_HOST=redis
@@ -50,6 +50,8 @@ services:
       - mynet
     ports:
       - "8082:80"
+    environment:
+      - API_BASE_URL=http://gateway/api
 
   mysql:
     image: mysql:8
