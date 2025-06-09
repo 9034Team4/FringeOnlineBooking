@@ -90,6 +90,11 @@ app.get('/db-init', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/db-init.html'));
 });
 
+// 添加一个直接重定向到init-db的路由
+app.get('/run-seeder', (req, res) => {
+  res.redirect('/api/public/init-db');
+});
+
 // 8. 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });

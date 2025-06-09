@@ -33,21 +33,6 @@
       margin-bottom: 20px;
       border-left: 5px solid #ffeeba;
     }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
     button {
       background-color: #4CAF50;
       color: white;
@@ -92,11 +77,6 @@
       <strong>警告：</strong> 此操作将清除所有现有数据并重新初始化数据库。请确保您了解此操作的后果。
     </div>
     
-    <div class="form-group">
-      <label for="adminKey">管理员密钥：</label>
-      <input type="text" id="adminKey" placeholder="请输入管理员密钥">
-    </div>
-    
     <button id="initButton">初始化数据库</button>
     
     <div id="result" class="result">
@@ -107,31 +87,16 @@
 
   <script>
     document.getElementById('initButton').addEventListener('click', async function() {
-      const adminKey = document.getElementById('adminKey').value;
       const resultDiv = document.getElementById('result');
       const resultTitle = document.getElementById('resultTitle');
       const resultContent = document.getElementById('resultContent');
-      
-      if (!adminKey) {
-        resultDiv.className = 'result error';
-        resultDiv.style.display = 'block';
-        resultTitle.textContent = '错误';
-        resultContent.textContent = '请输入管理员密钥';
-        return;
-      }
       
       // 禁用按钮，显示加载状态
       this.disabled = true;
       this.textContent = '正在初始化...';
       
       try {
-        const response = await fetch('/api/admin/database/initialize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Key': adminKey
-          }
-        });
+        const response = await fetch('/api/public/init-db');
         
         const data = await response.json();
         
