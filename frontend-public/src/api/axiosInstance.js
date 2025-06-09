@@ -1,7 +1,8 @@
 import axios from 'axios';
+const isProd = process.env.NODE_ENV === 'production';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: isProd ? `http://3.25.85.247/api` : 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
