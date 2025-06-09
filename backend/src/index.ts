@@ -29,6 +29,11 @@ AppDataSource.initialize()
 .then(async () => {
   console.log('✅ MySQL connection established');
   app.set('db', AppDataSource);
+
+  console.log(
+    '✔️ Entities loaded:',
+    AppDataSource.entityMetadatas.map((e) => e.name)
+  );
   
   // 移除自动seed的代码
 })
