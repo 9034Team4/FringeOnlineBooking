@@ -332,8 +332,8 @@ export default {
 
 .event-header-info {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 5px;
+  right: 5px;
   background: white;
   padding: 20px;
   border-radius: 8px;

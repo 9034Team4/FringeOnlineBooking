@@ -8,6 +8,7 @@ import { EventCategory } from './entities/EventCategory';
 import { Venue } from './entities/Venue';
 import bcryptjs from 'bcryptjs';
 import { Seat, SeatStatus } from './entities/Seat';
+import { Not, IsNull } from 'typeorm';
 
 // Mock event data based on frontend-public/src/mocks/events.js
 const mockEvents = [
@@ -104,6 +105,7 @@ async function clearData() {
     await AppDataSource.query('TRUNCATE TABLE payment;');
     await AppDataSource.query('TRUNCATE TABLE ticket;');
     await AppDataSource.query('TRUNCATE TABLE booking;');
+    await AppDataSource.query('TRUNCATE TABLE seat;');
     await AppDataSource.query('TRUNCATE TABLE event;');
     await AppDataSource.query('TRUNCATE TABLE user;');
     await AppDataSource.query('TRUNCATE TABLE venue;');
@@ -141,24 +143,24 @@ async function seed() {
       name: 'Adelaide Festival Centre', 
       location: 'King William Rd, Adelaide SA 5000, Australia',
       imageUrl: 'https://images.unsplash.com/photo-1598945753867-1dce6eaf4b2d?q=80&w=1000&auto=format&fit=crop',
-      capacity: 2000,
+      capacity: 120, // 10×12 = 120个座位
       hasAssignedSeating: true,
       seatingLayout: {
-        rows: 20,
-        columns: 30,
-        rowLabels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'],
+        rows: 10,
+        columns: 12,
+        rowLabels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'],
         sectionLayout: {
           'Orchestra': {
             startRow: 0,
-            endRow: 9,
+            endRow: 4,
             startCol: 0,
-            endCol: 29
+            endCol: 11
           },
           'Mezzanine': {
-            startRow: 10,
-            endRow: 19,
+            startRow: 5,
+            endRow: 9,
             startCol: 0,
-            endCol: 29
+            endCol: 11
           }
         }
       }
@@ -167,24 +169,24 @@ async function seed() {
       name: 'Adelaide Convention Centre', 
       location: 'North Terrace, Adelaide SA 5000, Australia',
       imageUrl: 'https://media.istockphoto.com/id/1397427251/photo/adelaide-convention-centre.jpg?s=612x612&w=0&k=20&c=f9Cg7PV-vNIg9jCnV2TxdDKYRhOxVBOpnZcgBIl9XpM=',
-      capacity: 3000,
+      capacity: 120,
       hasAssignedSeating: true,
       seatingLayout: {
-        rows: 30,
-        columns: 40,
-        rowLabels: Array.from({ length: 30 }, (_, i) => String(i + 1)),
+        rows: 10,
+        columns: 12,
+        rowLabels: Array.from({ length: 10 }, (_, i) => String(i + 1)),
         sectionLayout: {
           'Main Hall': {
             startRow: 0,
-            endRow: 19,
+            endRow: 5,
             startCol: 0,
-            endCol: 39
+            endCol: 11
           },
           'Balcony': {
-            startRow: 20,
-            endRow: 29,
-            startCol: 10,
-            endCol: 29
+            startRow: 6,
+            endRow: 9,
+            startCol: 2,
+            endCol: 9
           }
         }
       }
@@ -193,24 +195,24 @@ async function seed() {
       name: 'The Garden of Unearthly Delights', 
       location: 'Rundle Park / Kadlitpina, East Terrace, Adelaide SA 5000',
       imageUrl: 'https://images.unsplash.com/photo-1598944999410-11a5a75daf49?q=80&w=1000&auto=format&fit=crop',
-      capacity: 800,
+      capacity: 120,
       hasAssignedSeating: true,
       seatingLayout: {
-        rows: 12,
-        columns: 18,
-        rowLabels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M'],
+        rows: 10,
+        columns: 12,
+        rowLabels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'],
         sectionLayout: {
           'Front': {
             startRow: 0,
-            endRow: 5,
+            endRow: 4,
             startCol: 0,
-            endCol: 17
+            endCol: 11
           },
           'Back': {
-            startRow: 6,
-            endRow: 11,
+            startRow: 5,
+            endRow: 9,
             startCol: 0,
-            endCol: 17
+            endCol: 11
           }
         }
       }
@@ -219,7 +221,7 @@ async function seed() {
       name: 'Gluttony', 
       location: 'Rymill Park / Murlawirrapurka, Cnr East Tce & Rundle St, Adelaide SA 5000',
       imageUrl: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?q=80&w=1000&auto=format&fit=crop',
-      capacity: 500,
+      capacity: 120,
       hasAssignedSeating: false,
       seatingLayout: null
     },
@@ -227,24 +229,24 @@ async function seed() {
       name: 'Adelaide Town Hall', 
       location: '128 King William St, Adelaide SA 5000, Australia',
       imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Adelaide_Town_Hall_at_night.jpg/800px-Adelaide_Town_Hall_at_night.jpg',
-      capacity: 1200,
+      capacity: 120,
       hasAssignedSeating: true,
       seatingLayout: {
-        rows: 15,
-        columns: 20,
-        rowLabels: ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG', 'HH', 'JJ', 'KK', 'LL', 'MM', 'NN', 'PP', 'QQ'],
+        rows: 10,
+        columns: 12,
+        rowLabels: ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG', 'HH', 'JJ', 'KK'],
         sectionLayout: {
           'Stalls': {
             startRow: 0,
-            endRow: 9,
+            endRow: 5,
             startCol: 0,
-            endCol: 19
+            endCol: 11
           },
           'Gallery': {
-            startRow: 10,
-            endRow: 14,
-            startCol: 5,
-            endCol: 14
+            startRow: 6,
+            endRow: 9,
+            startCol: 2,
+            endCol: 9
           }
         }
       }
@@ -270,10 +272,16 @@ async function seed() {
       const layout = venue.seatingLayout;
       const seats: Seat[] = [];
       
+      // 确保使用固定的10×12布局
+      const rowCount = 10;
+      const colCount = 12;
+      
       // Create seats based on the seating layout
-      for (let rowIdx = 0; rowIdx < layout.rows; rowIdx++) {
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
         const rowLabel = layout.rowLabels[rowIdx];
-        for (let colIdx = 0; colIdx < layout.columns; colIdx++) {
+        for (let colIdx = 0; colIdx < colCount; colIdx++) {
+          const colNumber = colIdx + 1;
+          
           // Determine which section this seat belongs to
           let sectionName = '';
           for (const [section, bounds] of Object.entries(layout.sectionLayout)) {
@@ -293,7 +301,7 @@ async function seed() {
           
           const seat = new Seat();
           seat.row = rowLabel;
-          seat.seatNumber = (colIdx + 1).toString();
+          seat.seatNumber = colNumber.toString();
           seat.section = sectionName;
           seat.venue = venue;
           seat.status = SeatStatus.AVAILABLE;
@@ -302,17 +310,15 @@ async function seed() {
           seat.isAccessible = false;
           
           // Make some seats wheelchair accessible
-          if (colIdx === 0 && (rowIdx === 0 || rowIdx === layout.rows - 1)) {
+          if ((colIdx === 0 || colIdx === colCount - 1) && (rowIdx === 0 || rowIdx === rowCount - 1)) {
             seat.isAccessible = true;
             seat.type = 'wheelchair';
           }
           
           // Make some seats VIP
-          if (sectionName === 'Orchestra' || sectionName === 'Stalls') {
-            if (rowIdx < 3 && colIdx >= Math.floor(layout.columns / 4) && colIdx < Math.floor(layout.columns * 3 / 4)) {
-              seat.type = 'vip';
-              seat.price = 50.00;
-            }
+          if (rowIdx < 2 && colIdx >= 3 && colIdx <= 8) {
+            seat.type = 'vip';
+            seat.price = 50.00;
           }
           
           seats.push(seat);
@@ -444,6 +450,141 @@ async function seed() {
   }
   await AppDataSource.getRepository(Event).save(events);
 
+  // 创建事件座位数据
+  console.log('Creating event seats...');
+  for (const event of events) {
+    // 只为有座位计划且场馆有座位布局的事件创建座位
+    if (event.hasSeatingPlan && event.venue.hasAssignedSeating && event.venue.seatingLayout) {
+      console.log(`Creating seats for event: ${event.name} at venue: ${event.venue.name}`);
+      
+      // 固定的10×12布局
+      const rowCount = 10;
+      const colCount = 12;
+      const rowLabels = event.venue.seatingLayout.rowLabels.slice(0, rowCount);
+      
+      // 为事件创建座位
+      const eventSeats: Seat[] = [];
+      
+      // 先获取该场馆的所有座位
+      const venueSeats = await AppDataSource.getRepository(Seat).find({
+        where: { 
+          venue: { id: event.venue.id },
+          event: { id: IsNull() } 
+        }
+      });
+      
+      // 创建场馆座位的映射，方便快速查找
+      const venueSeatMap = new Map();
+      venueSeats.forEach(seat => {
+        const key = `${seat.row}-${seat.seatNumber}`;
+        venueSeatMap.set(key, seat);
+      });
+      
+      console.log(`Found ${venueSeats.length} venue seats for mapping to event`);
+      
+      for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+        const rowLabel = rowLabels[rowIdx];
+        
+        for (let colIdx = 0; colIdx < colCount; colIdx++) {
+          const colNumber = colIdx + 1;
+          const seatNumberStr = colNumber.toString();
+          
+          // 确定座位所在的区域
+          let sectionName = '';
+          for (const [section, bounds] of Object.entries(event.venue.seatingLayout.sectionLayout)) {
+            if (
+              rowIdx >= bounds.startRow && 
+              rowIdx <= bounds.endRow && 
+              colIdx >= bounds.startCol && 
+              colIdx <= bounds.endCol
+            ) {
+              sectionName = section;
+              break;
+            }
+          }
+          
+          // 如果不在任何区域内，跳过
+          if (!sectionName) continue;
+          
+          // 检查该座位是否已存在于场馆中
+          const seatKey = `${rowLabel}-${seatNumberStr}`;
+          const existingVenueSeat = venueSeatMap.get(seatKey);
+          
+          const eventSeat = new Seat();
+          
+          if (existingVenueSeat) {
+            // 如果场馆中存在该座位，复制其属性
+            eventSeat.row = existingVenueSeat.row;
+            eventSeat.seatNumber = existingVenueSeat.seatNumber;
+            eventSeat.section = existingVenueSeat.section;
+            eventSeat.venue = event.venue;
+            eventSeat.event = event;
+            eventSeat.status = SeatStatus.AVAILABLE;
+            eventSeat.type = existingVenueSeat.type;
+            eventSeat.price = existingVenueSeat.type === 'vip' ? 
+              event.basePrice * 1.5 : 
+              (existingVenueSeat.type === 'wheelchair' ? event.basePrice * 0.8 : event.basePrice);
+            eventSeat.isAccessible = existingVenueSeat.isAccessible;
+            console.log(`Mapping venue seat ${seatKey} to event`);
+          } else {
+            // 如果场馆中不存在该座位，创建一个新的座位
+            console.log(`Creating new seat ${seatKey} for event (not found in venue)`);
+            eventSeat.row = rowLabel;
+            eventSeat.seatNumber = seatNumberStr;
+            eventSeat.section = sectionName;
+            eventSeat.venue = event.venue;
+            eventSeat.event = event;
+            eventSeat.status = SeatStatus.AVAILABLE;
+            
+            // 设置座位类型和价格
+            if (rowIdx < 2 && colIdx >= 3 && colIdx <= 8) {
+              // VIP座位
+              eventSeat.type = 'vip';
+              eventSeat.price = event.basePrice * 1.5;
+            } else if ((colIdx === 0 || colIdx === colCount - 1) && (rowIdx === 0 || rowIdx === rowCount - 1)) {
+              // 轮椅座位
+              eventSeat.type = 'wheelchair';
+              eventSeat.price = event.basePrice * 0.8;
+              eventSeat.isAccessible = true;
+            } else {
+              // 标准座位
+              eventSeat.type = 'standard';
+              eventSeat.price = event.basePrice;
+              eventSeat.isAccessible = false;
+            }
+            
+            // 同时创建场馆座位（如果不存在）
+            const venueSeat = new Seat();
+            venueSeat.row = rowLabel;
+            venueSeat.seatNumber = seatNumberStr;
+            venueSeat.section = sectionName;
+            venueSeat.venue = event.venue;
+            venueSeat.status = SeatStatus.AVAILABLE;
+            venueSeat.type = eventSeat.type;
+            venueSeat.price = eventSeat.price;
+            venueSeat.isAccessible = eventSeat.isAccessible;
+            
+            await AppDataSource.getRepository(Seat).save(venueSeat);
+            console.log(`Created new venue seat ${seatKey}`);
+          }
+          
+          eventSeats.push(eventSeat);
+        }
+      }
+      
+      // 保存事件座位
+      if (eventSeats.length > 0) {
+        // 分批保存以避免内存问题
+        const batchSize = 100;
+        for (let i = 0; i < eventSeats.length; i += batchSize) {
+          const batch = eventSeats.slice(i, i + batchSize);
+          await AppDataSource.getRepository(Seat).save(batch);
+        }
+        console.log(`Created ${eventSeats.length} seats for event: ${event.name}`);
+      }
+    }
+  }
+
   // 5. Create some bookings
   const bookings: Booking[] = [];
   for (let i = 0; i < 40; i++) {
@@ -464,47 +605,23 @@ async function seed() {
   await AppDataSource.getRepository(Booking).save(bookings);
   await AppDataSource.getRepository(Event).save(events);
 
-  // 6. Create tickets
-  const tickets: Ticket[] = [];
-  for (let i = 0; i < 80; i++) {
-    const ticket = new Ticket();
-    ticket.user = users[i % users.length];
-    ticket.event = events[i % events.length];
-    ticket.type = i % 2 === 0 ? TicketType.REGULAR : TicketType.VIP;
-    ticket.booking = bookings[i % bookings.length];
-    ticket.price = ticket.type === TicketType.VIP ? 
-      events[i % events.length].basePrice * 1.5 : 
-      events[i % events.length].basePrice;
-    ticket.status = TicketStatus.VALID;
-    ticket.qrCode = `QR${i}${Date.now()}`;
-    ticket.isScanned = false;
-    ticket.isRefunded = false;
-    tickets.push(ticket);
-  }
-  await AppDataSource.getRepository(Ticket).save(tickets);
-
-  // 7. Create payments
-  const payments: Payment[] = [];
-  for (let i = 0; i < 30; i++) {
-    const payment = new Payment();
-    payment.user = users[i % users.length];
-    payment.ticket = tickets[i % tickets.length];
-    payment.method = ['Credit Card', 'PayPal', 'Bank Transfer'][i % 3];
-    payment.amount = tickets[i % tickets.length].price;
-    payment.status = 'Success';
-    payment.transactionId = `TXN${i}${Date.now()}`;
-    payment.timestamp = new Date();
-    payments.push(payment);
-  }
-  await AppDataSource.getRepository(Payment).save(payments);
+  // 获取座位总数
+  const totalSeats = await AppDataSource.getRepository(Seat).count();
+  const eventSeats = await AppDataSource.getRepository(Seat).count({
+    where: { event: { id: Not(IsNull()) } }
+  });
+  const venueSeats = await AppDataSource.getRepository(Seat).count({
+    where: { event: { id: IsNull() } }
+  });
 
   console.log('✅ Seeder finished! Created:');
   console.log(`   - ${users.length} users`);
   console.log(`   - ${venues.length} venues`);
   console.log(`   - ${events.length} events`);
+  console.log(`   - ${totalSeats} total seats (${venueSeats} venue seats, ${eventSeats} event seats)`);
   console.log(`   - ${bookings.length} bookings`);
-  console.log(`   - ${tickets.length} tickets`);
-  console.log(`   - ${payments.length} payments`);
+  console.log(`   - 0 tickets`);
+  console.log(`   - 0 payments`);
   
   process.exit(0);
 }

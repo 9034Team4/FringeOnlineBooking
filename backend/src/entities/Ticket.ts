@@ -61,10 +61,22 @@ export class Ticket {
   status!: TicketStatus;
 
   @Column({ nullable: true })
+  row?: string;
+
+  @Column({ nullable: true })
   seatNumber?: string;
 
   @Column({ nullable: true })
   section?: string;
+
+  @Column({ nullable: true })
+  ticketNumber?: string;
+
+  @Column({ nullable: true })
+  customerName?: string;
+
+  @Column({ nullable: true })
+  eventImage?: string;
 
   @Column({ nullable: true })
   qrCode!: string;

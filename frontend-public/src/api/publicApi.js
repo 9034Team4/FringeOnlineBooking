@@ -3,15 +3,15 @@ import axiosInstance from './axiosInstance';
 // --- Auth ---
 export const auth = {
   register: (data) =>
-    axiosInstance.post('/auth/register', data),
+    axiosInstance.post('/public/auth/register', data),
   login: (data) =>
-    axiosInstance.post('/auth/login', data),
+    axiosInstance.post('/public/auth/login', data),
   getProfile: () =>
-    axiosInstance.get('/auth/profile'),
+    axiosInstance.get('/public/auth/profile'),
   updateProfile: (data) =>
-    axiosInstance.put('/auth/profile', data),
+    axiosInstance.put('/public/auth/profile', data),
   changePassword: (data) =>
-    axiosInstance.put('/auth/change-password', data),
+    axiosInstance.put('/public/auth/change-password', data),
 };
 
 // --- Events ---

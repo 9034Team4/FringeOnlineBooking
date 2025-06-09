@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Fetch user profile
   async function fetchUserProfile() {
     try {
-      const response = await axiosInstance.get('/auth/profile')
+      const response = await axiosInstance.get('/public/auth/profile')
       if (response.data && response.data.success) {
         setUser(response.data.data)
       } else {

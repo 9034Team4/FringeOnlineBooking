@@ -6,7 +6,7 @@
       <div class="row justify-content-center">
         <div class="col-md-10">
           <div class="row">
-            <!-- <div class="col-md-4">
+            <div class="col-md-4">
               <div class="event-info card">
                 <img 
                   :src="`/images/${event?.imageUrl}` || 'https://via.placeholder.com/400x200'" 
@@ -33,7 +33,7 @@
                   </div>
                 </div>
               </div>          
-            </div> -->
+            </div>
             
             <div class="col-md-8">         
               <div v-if="loading" class="text-center my-5">
@@ -153,7 +153,7 @@ export default {
 
 .event-info .card-img-top {
   width: 100%;
-  height: 200px;
+  height: 100px;
   object-fit: cover;
   object-position: center;
 }

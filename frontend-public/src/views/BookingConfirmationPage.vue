@@ -5,127 +5,37 @@
         <div class="success-icon mb-4">
           <i class="bi bi-check-circle-fill"></i>
         </div>
-        <h1>预订成功！</h1>
-        <p class="lead">您的座位已成功预订，感谢您使用我们的服务</p>
+        <h1>Booking Successful!</h1>
+        <p class="lead">Your seats have been successfully booked, thank you for using our service</p>
       </div>
     </div>
     
     <div class="container my-5">
       <div class="row">
-        <div class="col-lg-8 mx-auto">
-          <div class="card confirmation-card">
-            <div class="card-body">
-              <div v-if="loading" class="text-center my-5">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
+        <div class="col-lg-10 mx-auto">
+          <div v-if="loading" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading order information...</p>
+          </div>
+          
+          <div v-else-if="error" class="alert alert-danger">
+            {{ error }}
+          </div>
+          
+          <div v-else>
+            <div v-if="ticketIds.length > 0" class="tickets-container mb-4">
+              <h4 class="section-title text-center mb-4">Your Tickets</h4>
+              <div class="row justify-content-center ticket-row">
+                <div v-for="ticketId in ticketIds" :key="ticketId" class="col-12 col-sm-6 col-lg-5 mb-4 ticket-column">
+                  <TicketCard 
+                    :ticketId="ticketId"
+                    :showActions="true"
+                    @download="downloadTicket"
+                    @viewDetails="viewTicketDetails"
+                  />
                 </div>
-                <p class="mt-3">正在加载订单信息...</p>
-              </div>
-              
-              <div v-else-if="error" class="alert alert-danger">
-                {{ error }}
-              </div>
-              
-              <div v-else>
-                <div class="confirmation-details">
-                  <div class="text-center mb-4">
-                    <h3>{{ event?.title }}</h3>
-                    <p class="text-muted">订单编号: #{{ generateOrderNumber() }}</p>
-                  </div>
-                  
-                  <div class="event-info mb-4">
-                    <div class="row info-row">
-                      <div class="col-md-4 info-label">
-                        <i class="bi bi-calendar-event"></i> 日期:
-                      </div>
-                      <div class="col-md-8 info-value">
-                        {{ formatDate(event?.startDate) }}
-                      </div>
-                    </div>
-                    
-                    <div class="row info-row">
-                      <div class="col-md-4 info-label">
-                        <i class="bi bi-clock"></i> 时间:
-                      </div>
-                      <div class="col-md-8 info-value">
-                        {{ formatTime(event?.startDate) }}
-                      </div>
-                    </div>
-                    
-                    <div class="row info-row">
-                      <div class="col-md-4 info-label">
-                        <i class="bi bi-geo-alt"></i> 地点:
-                      </div>
-                      <div class="col-md-8 info-value">
-                        {{ event?.venue?.name }}
-                      </div>
-                    </div>
-                    
-                    <div class="row info-row">
-                      <div class="col-md-4 info-label">
-                        <i class="bi bi-person"></i> 姓名:
-                      </div>
-                      <div class="col-md-8 info-value">
-                        {{ user?.firstName }} {{ user?.lastName }}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="ticket-details mb-4">
-                    <h4 class="section-title">座位信息</h4>
-                    <div class="table-responsive">
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th>区域</th>
-                            <th>行</th>
-                            <th>座位号</th>
-                            <th>价格</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="seat in selectedSeats" :key="seat.id">
-                            <td>{{ seat.section || '默认区域' }}</td>
-                            <td>{{ seat.row }}</td>
-                            <td>{{ seat.seatNumber }}</td>
-                            <td>${{ seat.price.toFixed(2) }}</td>
-                          </tr>
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <td colspan="3" class="text-end"><strong>总计:</strong></td>
-                            <td><strong>${{ calculateTotal().toFixed(2) }}</strong></td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </div>
-                  
-                  <div class="qr-code text-center mb-4">
-                    <h4 class="section-title">入场二维码</h4>
-                    <p class="text-muted">请在活动当天出示此二维码</p>
-                    <img src="/images/qr-code-sample.png" alt="Entry QR Code" class="img-fluid" style="max-width: 200px;" />
-                  </div>
-                  
-                  <div class="important-info alert alert-info">
-                    <h5><i class="bi bi-info-circle"></i> 重要信息</h5>
-                    <ul>
-                      <li>活动开始前30分钟入场</li>
-                      <li>请携带身份证明文件</li>
-                      <li>入场后请遵守场馆规定</li>
-                      <li>禁止携带食物和饮料进入场馆</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="action-buttons mt-5 d-flex justify-content-center gap-3">
-                <button class="btn btn-primary" @click="downloadTicket">
-                  <i class="bi bi-download me-2"></i> 下载票据
-                </button>
-                <button class="btn btn-outline-primary" @click="goToMyTickets">
-                  <i class="bi bi-ticket-perforated me-2"></i> 查看我的票
-                </button>
               </div>
             </div>
           </div>
@@ -136,64 +46,29 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
+import TicketCard from '../components/TicketCard.vue';
 
 export default {
   name: 'BookingConfirmationPage',
+  components: {
+    TicketCard
+  },
   setup() {
     const route = useRoute();
     const router = useRouter();
     const authStore = useAuthStore();
     
-    const eventId = ref(route.params.eventId);
-    const seatIds = ref(route.query.seats?.toString().split(',').map(Number) || []);
-    const bookingTimestamp = ref(route.query.timestamp || Date.now());
+    const bookingId = ref(route.query.bookingId);
+    const ticketIds = ref(route.query.ticketIds?.toString().split(',') || []);
     
-    const event = ref(null);
-    const selectedSeats = ref([]);
     const loading = ref(true);
     const error = ref(null);
-    const user = computed(() => authStore.user);
     
-    // Format date
-    const formatDate = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        weekday: 'long'
-      });
-    };
-    
-    // Format time
-    const formatTime = (dateString) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit'
-      });
-    };
-    
-    // Generate order number based on timestamp and user ID
-    const generateOrderNumber = () => {
-      const timestamp = new Date(parseInt(bookingTimestamp.value)).getTime();
-      const userId = user.value?.id || '0000';
-      return `${timestamp.toString().substring(5)}${userId.substring(0, 4)}`;
-    };
-    
-    // Calculate total price
-    const calculateTotal = () => {
-      return selectedSeats.value.reduce((total, seat) => total + seat.price, 0);
-    };
-    
-    // Fetch event and seat details
-    const fetchData = async () => {
+    // Check authentication and ticket IDs
+    const checkAuthAndTickets = async () => {
       try {
         loading.value = true;
         
@@ -203,33 +78,28 @@ export default {
           return;
         }
         
-        // Fetch event details
-        const eventResponse = await axios.get(`/api/public/events/${eventId.value}`);
-        if (eventResponse.data.success) {
-          event.value = eventResponse.data.data;
-        } else {
-          throw new Error(eventResponse.data.message);
+        // Check if we have ticket IDs
+        if (ticketIds.value.length === 0) {
+          error.value = 'No ticket information found';
         }
         
-        // Fetch detailed seat information for booked seats
-        const seatDetailsResponse = await axios.get(`/api/events/${eventId.value}/seats`);
-        if (seatDetailsResponse.data.success) {
-          const allSeats = seatDetailsResponse.data.data;
-          selectedSeats.value = allSeats.filter(s => seatIds.value.includes(s.id));
-        } else {
-          throw new Error(seatDetailsResponse.data.message);
-        }
       } catch (err) {
-        error.value = err.message || 'Failed to load booking details';
+        error.value = err.message || 'Failed to load ticket details';
       } finally {
         loading.value = false;
       }
     };
     
-    // Download ticket as PDF
-    const downloadTicket = () => {
+    // Download a single ticket
+    const downloadTicket = (ticketId) => {
       // In a real application, this would generate and download a PDF
-      alert('票据下载功能正在开发中...');
+      alert(`Ticket download feature is under development for ticket: ${ticketId}...`);
+    };
+    
+    // Download all tickets
+    const downloadAllTickets = () => {
+      // In a real application, this would generate and download all tickets as PDF
+      alert('Download all tickets feature is under development...');
     };
     
     // Go to my tickets page
@@ -237,22 +107,24 @@ export default {
       router.push({ name: 'my-tickets' });
     };
     
+    // View ticket details
+    const viewTicketDetails = (ticketId) => {
+      router.push({ name: 'ticket-details', params: { ticketId } });
+    };
+    
     onMounted(() => {
-      fetchData();
+      checkAuthAndTickets();
     });
     
     return {
-      event,
-      selectedSeats,
+      ticketIds,
+      bookingId,
       loading,
       error,
-      user,
-      formatDate,
-      formatTime,
-      generateOrderNumber,
-      calculateTotal,
       downloadTicket,
-      goToMyTickets
+      downloadAllTickets,
+      goToMyTickets,
+      viewTicketDetails
     };
   }
 };
@@ -267,7 +139,7 @@ export default {
 .confirmation-header {
   background-color: #28a745;
   color: white;
-  padding: 2rem 0;
+  padding: 5px 0;
 }
 
 .success-icon {
@@ -346,5 +218,149 @@ export default {
 
 .action-buttons .btn {
   padding: 0.5rem 1.5rem;
+}
+
+/* Ticket card styles */
+.ticket-card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.ticket-header {
+  background-color: #007bff;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+.ticket-header h5 {
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.ticket-number {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.ticket-body {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ticket-info p {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.ticket-qr {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+}
+
+/* 新增的TicketView样式 */
+.ticket-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.ticket-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.2rem;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.event-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+.event-info h2 {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.venue {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+.ticket-details {
+  text-align: left;
+  margin: 1rem 0;
+}
+
+.detail-pair {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.value {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.barcode img {
+  width: 100%;
+  height: auto;
+  margin: 1rem 0 0.5rem;
+}
+
+.barcode-note {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.ticket-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ticket-column {
+  display: flex;
+}
+
+@media (max-width: 767.98px) {
+  .ticket-row {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .ticket-column {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+@media (min-width: 768px) {
+  .tickets-container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
 }
 </style> 

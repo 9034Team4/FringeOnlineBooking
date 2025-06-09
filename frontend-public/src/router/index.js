@@ -80,7 +80,15 @@ const routes = [
   {
     path: '/my-tickets',
     name: 'my-tickets',
-    component: () => import('@/views/TicketView.vue')
+    component: () => import('../views/MyTicketsPage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/ticket/:id',
+    name: 'ticket-details',
+    component: () => import('../views/TicketDetailsPage.vue'),
+    props: true,
+    meta: { requiresAuth: true }
   }
 ]
 

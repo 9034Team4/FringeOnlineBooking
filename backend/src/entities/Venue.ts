@@ -36,6 +36,15 @@ export class Venue {
   location!: string; // Physical or geographic location
 
   @Column({ nullable: true })
+  address!: string; // Street address
+
+  @Column({ nullable: true })
+  city!: string; // City name
+
+  @Column({ nullable: true })
+  gate!: string; // Main entrance gate
+
+  @Column({ nullable: true })
   imageUrl!: string; // Venue image URL
 
   @Column({ type: 'int', default: 0 })

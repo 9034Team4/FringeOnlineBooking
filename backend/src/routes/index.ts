@@ -183,7 +183,7 @@ router.post('/admin/login', wrapHandler(AdminAuthController.login));
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: User profile data
+ *         description: User profile
  *   put:
  *     summary: Update user profile
  *     tags: [Auth]
@@ -194,8 +194,6 @@ router.post('/admin/login', wrapHandler(AdminAuthController.login));
  *           schema:
  *             type: object
  *             properties:
- *               name:
- *                 type: string
  *               firstName:
  *                 type: string
  *               lastName:
@@ -204,6 +202,7 @@ router.post('/admin/login', wrapHandler(AdminAuthController.login));
  *       200:
  *         description: Profile updated
  */
+// 注意：这些路由也可以通过/api/public访问
 router.get('/auth/profile', requireAuth, wrapHandler(UserAuthController.getProfile));
 router.put('/auth/profile', requireAuth, wrapHandler(UserAuthController.updateProfile));
 

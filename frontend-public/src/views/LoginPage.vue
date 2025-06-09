@@ -83,8 +83,18 @@ async function handleLogin() {
     const result = await authStore.login(email.value, password.value)
     
     if (result.success) {
-      // If login successful, redirect to home page
-      router.push('/')
+      // 检查是否有保存的重定向路径
+      const redirectPath = localStorage.getItem('redirectAfterLogin')
+      
+      if (redirectPath) {
+        // 清除存储的路径
+        localStorage.removeItem('redirectAfterLogin')
+        // 重定向到保存的路径
+        router.push(redirectPath)
+      } else {
+        // 如果没有保存的路径，重定向到首页
+        router.push('/')
+      }
     } else {
       // Show error message if login failed
       errorMsg.value = result.message || 'Login failed.'

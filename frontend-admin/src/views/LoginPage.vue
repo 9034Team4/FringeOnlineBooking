@@ -55,6 +55,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const router = useRouter()
 const email = ref('')
@@ -63,27 +64,44 @@ const errorMsg = ref('')
 const isLoading = ref(false)
 const showForgot = ref(false)
 
-function handleLogin() {
+async function handleLogin() {
   errorMsg.value = ''
   if (!email.value) {
-    errorMsg.value = 'Email is required.'
+    errorMsg.value = '邮箱不能为空'
     return
   }
   if (!password.value) {
-    errorMsg.value = 'Password is required.'
+    errorMsg.value = '密码不能为空'
     return
   }
+  
   isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    // TODO: Call backend API
-    if (email.value === 'test@test.com' && password.value === '123456') {
-      localStorage.setItem('token', 'mock_token')
+  try {
+    const response = await axios.post('http://localhost:3000/api/admin/login', {
+      email: email.value,
+      password: password.value
+    })
+    
+    if (response.data && response.data.success && response.data.data && response.data.data.token) {
+      // 保存token
+      localStorage.setItem('token', response.data.data.token)
+      
+      // 保存用户信息
+      localStorage.setItem('user', JSON.stringify(response.data.data.user))
+      
+      // 设置axios默认headers
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.token}`
+      
       router.push('/dashboard')
     } else {
-      errorMsg.value = 'Incorrect email or password.'
+      errorMsg.value = '登录失败，请检查响应数据格式'
     }
-  }, 1000)
+  } catch (error) {
+    console.error('登录错误:', error)
+    errorMsg.value = error.response?.data?.message || '登录失败，请检查您的凭据'
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function googleLogin() {

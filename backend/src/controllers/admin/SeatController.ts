@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getRepository, getManager, In, FindOptionsWhere } from 'typeorm';
+import { In, FindOptionsWhere } from 'typeorm';
 import { Seat, SeatStatus } from '../../entities/Seat';
 import { 
   seatCreateSchema, 
@@ -9,6 +9,7 @@ import {
 } from '../../schemas/admin';
 import { ZodError } from 'zod';
 import { redisClient, connectRedis } from '../../config/redis';
+import { AppDataSource } from '../../config/data-source';
 
 // Seat lock timeout in seconds
 const SEAT_LOCK_TIMEOUT = 300; // 5 minutes
@@ -31,7 +32,7 @@ export const SeatController = {
     try {
       const { eventId } = getAvailableSeatsSchema.parse(req.params);
       
-      const seatRepository = getRepository(Seat);
+      const seatRepository = AppDataSource.getRepository(Seat);
       
       // Using type casting to overcome TypeORM type limitations
       const whereCondition = {
@@ -72,7 +73,7 @@ export const SeatController = {
    * @param res Response object
    */
   async lockSeats(req: Request, res: Response) {
-    const queryRunner = getManager().connection.createQueryRunner();
+    const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -184,7 +185,7 @@ export const SeatController = {
    * @param res Response object
    */
   async confirmBooking(req: Request, res: Response) {
-    const queryRunner = getManager().connection.createQueryRunner();
+    const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -272,7 +273,7 @@ export const SeatController = {
   },
 
   /**
-   * Release expired locked seats
+   * Release expired seat locks
    * @param req Request object
    * @param res Response object
    */
@@ -280,74 +281,73 @@ export const SeatController = {
     try {
       // Ensure Redis is connected
       const redis = await ensureRedisConnection();
-
-      // Get all seats with LOCKED status
-      const seatRepository = getRepository(Seat);
-      // Using type casting to overcome TypeORM type limitations
-      const whereCondition = {
-        status: SeatStatus.LOCKED
-      } as FindOptionsWhere<Seat>;
       
-      const lockedSeats = await seatRepository.find({
-        where: whereCondition
-      });
-
       const now = new Date();
-      const releasedSeatIds: number[] = [];
-
-      // Check each seat for expiration
-      await Promise.all(lockedSeats.map(async seat => {
-        // Check lock existence in Redis, if not exists then consider expired
-        const lockKey = `seat:lock:${seat.id}`;
-        const exists = await redis.exists(lockKey);
-        
-        if (!exists) {
-          seat.status = SeatStatus.AVAILABLE;
-          seat.lockTime = null as any;
-          seat.lockBy = null as any;
-          await seatRepository.save(seat);
-          releasedSeatIds.push(seat.id);
+      const cutoffTime = new Date(now.getTime() - SEAT_LOCK_TIMEOUT * 1000);
+      
+      const seatRepository = AppDataSource.getRepository(Seat);
+      
+      // Find all seats with lock times older than the cutoff
+      const expiredLocks = await seatRepository.find({
+        where: {
+          status: SeatStatus.LOCKED,
+          lockTime: {
+            $lt: cutoffTime
+          } as any // TypeORM doesn't have great support for date comparisons
         }
-      }));
-
+      });
+      
+      if (expiredLocks.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'No expired locks found',
+          data: { releasedCount: 0 }
+        });
+      }
+      
+      // Release each expired lock
+      for (const seat of expiredLocks) {
+        seat.status = SeatStatus.AVAILABLE;
+        seat.lockTime = null as any;
+        seat.lockBy = null as any;
+        await seatRepository.save(seat);
+        
+        // Remove from Redis too
+        const lockKey = `seat:lock:${seat.id}`;
+        await redis.del(lockKey);
+      }
+      
       return res.status(200).json({
         success: true,
-        message: 'Expired seat locks released',
+        message: `Released ${expiredLocks.length} expired seat locks`,
         data: {
-          releasedSeats: releasedSeatIds,
-          count: releasedSeatIds.length
+          releasedCount: expiredLocks.length,
+          seats: expiredLocks.map(s => s.id)
         }
       });
     } catch (err: unknown) {
       console.error(err);
       return res.status(500).json({
         success: false,
-        message: 'Failed to release expired seat locks',
+        message: 'Failed to release expired locks',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
       });
     }
   },
 
   /**
-   * Create a new seat
+   * Create new seats for a venue or event
    * @param req Request object
    * @param res Response object
    */
   async create(req: Request, res: Response) {
     try {
-      // Verify admin authentication
-      // TODO: Ensure admin is authenticated
-
-      const validatedData = seatCreateSchema.parse(req.body);
-      const seatRepository = getRepository(Seat);
+      const seatData = seatCreateSchema.parse(req.body);
+      const seatRepository = AppDataSource.getRepository(Seat);
       
-      const newSeat = seatRepository.create({
-        ...validatedData,
-        status: SeatStatus.AVAILABLE
-      });
-      
+      const newSeat = seatRepository.create(seatData);
       await seatRepository.save(newSeat);
-
+      
       return res.status(201).json({
         success: true,
         message: 'Seat created successfully',
@@ -355,6 +355,7 @@ export const SeatController = {
       });
     } catch (err: unknown) {
       console.error(err);
+      
       if (err instanceof ZodError) {
         return res.status(400).json({
           success: false,
@@ -362,6 +363,7 @@ export const SeatController = {
           error: err.message
         });
       }
+      
       return res.status(500).json({
         success: false,
         message: 'Failed to create seat',
@@ -369,7 +371,7 @@ export const SeatController = {
       });
     }
   },
-
+  
   /**
    * Get all seats for a venue
    * @param req Request object
@@ -378,18 +380,15 @@ export const SeatController = {
   async getByVenue(req: Request, res: Response) {
     try {
       const { venueId } = req.params;
-      
-      const seatRepository = getRepository(Seat);
-      // Using type casting to overcome TypeORM type limitations
-      const whereCondition = {
-        venue: { id: parseInt(venueId) }
-      } as FindOptionsWhere<Seat>;
+      const seatRepository = AppDataSource.getRepository(Seat);
       
       const seats = await seatRepository.find({
-        where: whereCondition,
+        where: { 
+          venue: { id: parseInt(venueId) } 
+        } as FindOptionsWhere<Seat>,
         relations: ['venue']
       });
-
+      
       return res.status(200).json({
         success: true,
         message: 'Venue seats retrieved successfully',
@@ -404,9 +403,9 @@ export const SeatController = {
       });
     }
   },
-
+  
   /**
-   * User releases their own locked seats
+   * Release all locks for a specific user
    * @param req Request object
    * @param res Response object
    */
@@ -420,137 +419,113 @@ export const SeatController = {
           error: null 
         });
       }
-
+      
       // Ensure Redis is connected
       const redis = await ensureRedisConnection();
-
-      const { eventId, seatIds } = req.body;
       
-      if (!eventId || !seatIds || !Array.isArray(seatIds) || seatIds.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid request data. eventId and seatIds array are required',
-          error: null
-        });
-      }
+      const seatRepository = AppDataSource.getRepository(Seat);
       
-      const seatRepository = getRepository(Seat);
-      
-      // Using type casting to overcome TypeORM type limitations
-      const whereCondition = {
-        id: In(seatIds),
-        event: { id: eventId },
-        status: SeatStatus.LOCKED,
-        lockBy: userId
-      } as FindOptionsWhere<Seat>;
-      
-      const seats = await seatRepository.find({
-        where: whereCondition
+      // Find all seats locked by this user
+      const lockedSeats = await seatRepository.find({
+        where: {
+          status: SeatStatus.LOCKED,
+          lockBy: userId
+        }
       });
-
-      if (seats.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'No matching locked seats found for this user',
-          error: null
+      
+      if (lockedSeats.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'No locked seats found for this user',
+          data: { releasedCount: 0 }
         });
       }
-
-      // Release seats
-      const releasedSeatIds: number[] = [];
-      await Promise.all(seats.map(async seat => {
+      
+      // Release each lock
+      for (const seat of lockedSeats) {
         seat.status = SeatStatus.AVAILABLE;
         seat.lockTime = null as any;
         seat.lockBy = null as any;
         await seatRepository.save(seat);
         
-        // Remove Redis lock
+        // Remove from Redis too
         const lockKey = `seat:lock:${seat.id}`;
         await redis.del(lockKey);
-        
-        releasedSeatIds.push(seat.id);
-      }));
-
+      }
+      
       return res.status(200).json({
         success: true,
-        message: 'User locked seats released successfully',
+        message: `Released ${lockedSeats.length} seat locks for user`,
         data: {
-          eventId,
-          releasedSeatIds
+          releasedCount: lockedSeats.length,
+          seats: lockedSeats.map(s => s.id)
         }
       });
     } catch (err: unknown) {
       console.error(err);
       return res.status(500).json({
         success: false,
-        message: 'Failed to release seats',
+        message: 'Failed to release user locks',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
       });
     }
   },
-
+  
   /**
-   * Get seat lock status
+   * Get lock status for a specific seat
    * @param req Request object
    * @param res Response object
    */
   async getLockStatus(req: Request, res: Response) {
     try {
-      const { eventId, seatIds } = req.query;
+      const { seatId } = req.params;
       
-      if (!eventId || !seatIds) {
-        return res.status(400).json({
-          success: false,
-          message: 'Missing eventId or seatIds',
-          error: null
-        });
-      }
-
-      // Convert comma-separated string to array if needed
-      const seatIdArray = Array.isArray(seatIds) 
-        ? seatIds.map(id => Number(id)) 
-        : seatIds.toString().split(',').map(id => Number(id));
-
       // Ensure Redis is connected
       const redis = await ensureRedisConnection();
       
-      const seatRepository = getRepository(Seat);
+      const seatRepository = AppDataSource.getRepository(Seat);
       
-      // Using type casting to overcome TypeORM type limitations
-      const whereCondition = {
-        id: In(seatIdArray),
-        event: { id: eventId.toString() }
-      } as FindOptionsWhere<Seat>;
-      
-      const seats = await seatRepository.find({
-        where: whereCondition
+      const seat = await seatRepository.findOne({
+        where: { id: parseInt(seatId) } as FindOptionsWhere<Seat>,
+        relations: ['event']
       });
-
-      // Check status of each seat and remaining lock time
-      const seatStatuses = await Promise.all(seats.map(async seat => {
-        const lockKey = `seat:lock:${seat.id}`;
-        const ttl = await redis.ttl(lockKey);
-        const isLocked = ttl > 0;
-        
-        return {
-          id: seat.id,
-          status: seat.status,
-          isLocked,
-          remainingLockTime: isLocked ? ttl : 0,
-          lockBy: seat.lockBy
-        };
-      }));
-
+      
+      if (!seat) {
+        return res.status(404).json({
+          success: false,
+          message: 'Seat not found',
+          error: null
+        });
+      }
+      
+      // Check Redis for lock info
+      const lockKey = `seat:lock:${seatId}`;
+      const lockUserId = await redis.get(lockKey);
+      const ttl = await redis.ttl(lockKey);
+      
       return res.status(200).json({
         success: true,
-        message: 'Seat lock status retrieved successfully',
-        data: seatStatuses
+        message: 'Seat lock status retrieved',
+        data: {
+          seat: {
+            id: seat.id,
+            status: seat.status,
+            lockTime: seat.lockTime,
+            lockBy: seat.lockBy
+          },
+          redis: {
+            isLocked: !!lockUserId,
+            lockUserId: lockUserId || null,
+            ttl: ttl > 0 ? ttl : null,
+            expiresAt: ttl > 0 ? new Date(Date.now() + ttl * 1000) : null
+          }
+        }
       });
     } catch (err: unknown) {
       console.error(err);
       return res.status(500).json({
         success: false,
-        message: 'Failed to get seat lock status',
+        message: 'Failed to get lock status',
         error: err instanceof Error ? err.message : 'Unknown error occurred'
       });
     }

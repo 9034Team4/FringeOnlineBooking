@@ -10,6 +10,8 @@ import {
   ticketRefundSchema
 } from '../../schemas/ticket';
 import { In } from 'typeorm';
+import { User } from '../../entities/User';
+import { emailService } from '../../services/EmailService';
 
 const ticketRepo = AppDataSource.getRepository(Ticket);
 const eventRepo = AppDataSource.getRepository(Event);
@@ -167,7 +169,7 @@ export const TicketController = {
         },
         skip: (page - 1) * limit,
         take: limit,
-        relations: ['event', 'user']
+        relations: ['event', 'event.venue', 'user']
       };
 
       // Get tickets
@@ -177,16 +179,42 @@ export const TicketController = {
         success: true,
         message: 'Tickets retrieved successfully',
         data: {
-          tickets: tickets.map((ticket) => ({
-            id: ticket.id,
-            eventId: ticket.event.id,
-            eventName: ticket.event.name,
-            type: ticket.type,
-            price: ticket.price,
-            status: ticket.status,
-            seatNumber: ticket.seatNumber,
-            purchaseDate: ticket.createdAt
-          })),
+          tickets: tickets.map((ticket) => {
+            // 构建座位信息
+            const seatInfo = ticket.row && ticket.seatNumber 
+              ? `${ticket.row}-${ticket.seatNumber}` 
+              : (ticket.seatNumber || 'General Admission');
+              
+            // 构建票号
+            const ticketNumber = ticket.ticketNumber || 
+              `TICKET-${ticket.id.substring(0, 8)}`;
+              
+            // 构建事件图片
+            const eventImage = ticket.eventImage || 
+              ticket.event.imageUrl || 
+              `/assets/images/event-${parseInt(ticket.event.id.substring(0, 4), 10) % 5 || 0}.png`;
+              
+            return {
+              id: ticket.id,
+              ticketId: ticket.id,
+              eventId: ticket.event.id,
+              eventTitle: ticket.event.name,
+              eventName: ticket.event.name,
+              eventDate: ticket.event.startTime,
+              venueName: ticket.event.venue?.name || 'Unknown Venue',
+              type: ticket.type,
+              price: ticket.price,
+              status: ticket.status,
+              seatInfo: seatInfo,
+              seatNumber: ticket.seatNumber,
+              section: ticket.section || '',
+              ticketNumber: ticketNumber,
+              purchaseDate: ticket.createdAt,
+              customerName: ticket.customerName || '',
+              qrCode: ticket.qrCode,
+              eventImage: eventImage
+            };
+          }),
           pagination: {
             page,
             limit,
@@ -230,7 +258,7 @@ export const TicketController = {
 
       const ticket = await ticketRepo.findOne({
         where: { id, user: { id: userId } },
-        relations: ['event', 'user']
+        relations: ['event', 'event.venue', 'user', 'booking']
       });
 
       if (!ticket) {
@@ -240,21 +268,49 @@ export const TicketController = {
         });
       }
 
+      // 构建座位信息
+      const seatInfo = ticket.row && ticket.seatNumber 
+        ? `${ticket.row}-${ticket.seatNumber}` 
+        : (ticket.seatNumber || 'General Admission');
+      
+      // 构建客户名称
+      const customerName = ticket.customerName || 
+        `${ticket.user.firstName} ${ticket.user.lastName}`.trim() || 
+        'Guest';
+      
+      // 构建事件图片
+      const eventImage = ticket.eventImage || 
+        ticket.event.imageUrl || 
+        `/assets/images/event-${parseInt(ticket.event.id.substring(0, 4), 10) % 5 || 0}.png`;
+      
+      // 构建票号
+      const ticketNumber = ticket.ticketNumber || 
+        `TICKET-${ticket.id.substring(0, 8)}`;
+
       return res.status(200).json({
         success: true,
         message: 'Ticket details retrieved successfully',
         data: {
           id: ticket.id,
+          ticketId: ticket.id,
           eventId: ticket.event.id,
-          eventName: ticket.event.name,
+          eventTitle: ticket.event.name,
           eventDate: ticket.event.startTime,
-          venue: ticket.event.venue,
+          venueName: ticket.event.venue?.name || 'Unknown Venue',
+          venueAddress: ticket.event.venue?.address || '',
+          venueCity: ticket.event.venue?.city || '',
+          customerName: customerName,
           type: ticket.type,
           price: ticket.price,
           status: ticket.status,
-          seatNumber: ticket.seatNumber,
+          seatInfo: seatInfo,
+          section: ticket.section || '',
+          ticketNumber: ticketNumber,
           purchaseDate: ticket.createdAt,
-          qrCode: ticket.qrCode
+          qrCode: ticket.qrCode,
+          eventImage: eventImage,
+          bookingId: ticket.booking?.id || '',
+          gate: ticket.event.venue?.gate || 'Main'
         }
       });
     } catch (err: unknown) {
@@ -410,6 +466,103 @@ export const TicketController = {
       return await this.getUserTickets(req, res);
     } catch (err: any) {
       return res.status(500).json({ success: false, message: 'Failed to get user tickets', error: err.message });
+    }
+  },
+
+  /**
+   * 通过电子邮件发送票据
+   */
+  async sendTicketByEmail(req: Request, res: Response) {
+    try {
+      // 获取用户ID
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required',
+          error: null
+        });
+      }
+
+      // 验证请求数据
+      const { ticketId, imageData, subject, eventTitle, customerName } = req.body;
+      
+      if (!ticketId || !imageData) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required parameters',
+          error: 'Ticket ID and image data are required'
+        });
+      }
+
+      // 获取票据信息
+      const ticket = await ticketRepo.findOne({
+        where: { id: ticketId },
+        relations: ['user', 'event']
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          success: false,
+          message: 'Ticket not found',
+          error: null
+        });
+      }
+
+      // 验证票据所有权
+      if (ticket.user.id !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'No access to this ticket',
+          error: null
+        });
+      }
+
+      // 获取用户电子邮件
+      const user = await AppDataSource.getRepository(User).findOne({
+        where: { id: userId }
+      });
+
+      if (!user || !user.email) {
+        return res.status(400).json({
+          success: false,
+          message: 'User email not found',
+          error: null
+        });
+      }
+
+      // 发送电子邮件
+      const emailSent = await emailService.sendTicketEmail(
+        user.email,
+        subject || `${ticket.event.name} - E-Ticket`,
+        customerName || user.firstName + ' ' + user.lastName,
+        eventTitle || ticket.event.name,
+        imageData
+      );
+
+      if (!emailSent) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send email',
+          error: 'Unable to send email, please try again later'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Ticket sent by email',
+        data: {
+          email: user.email,
+          ticketId: ticket.id
+        }
+      });
+    } catch (err: unknown) {
+      console.error('Error sending ticket email:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send ticket email',
+        error: err instanceof Error ? err.message : 'Unknown error occurred'
+      });
     }
   }
 }; 
