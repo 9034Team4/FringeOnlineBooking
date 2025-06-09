@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据库初始化工具</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .warning {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 5px solid #ffeeba;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border-left: 5px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border-left: 5px solid #f5c6cb;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>数据库初始化工具</h1>
+    
+    <div class="warning">
+      <strong>警告：</strong> 此操作将清除所有现有数据并重新初始化数据库。请确保您了解此操作的后果。
+    </div>
+    
+    <div class="form-group">
+      <label for="adminKey">管理员密钥：</label>
+      <input type="text" id="adminKey" placeholder="请输入管理员密钥">
+    </div>
+    
+    <button id="initButton">初始化数据库</button>
+    
+    <div id="result" class="result">
+      <h3 id="resultTitle"></h3>
+      <pre id="resultContent"></pre>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('initButton').addEventListener('click', async function() {
+      const adminKey = document.getElementById('adminKey').value;
+      const resultDiv = document.getElementById('result');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultContent = document.getElementById('resultContent');
+      
+      if (!adminKey) {
+        resultDiv.className = 'result error';
+        resultDiv.style.display = 'block';
+        resultTitle.textContent = '错误';
+        resultContent.textContent = '请输入管理员密钥';
+        return;
+      }
+      
+      // 禁用按钮，显示加载状态
+      this.disabled = true;
+      this.textContent = '正在初始化...';
+      
+      try {
+        const response = await fetch('/api/admin/database/initialize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultDiv.className = 'result success';
+          resultTitle.textContent = '成功';
+        } else {
+          resultDiv.className = 'result error';
+          resultTitle.textContent = '错误';
+        }
+        
+        resultContent.textContent = JSON.stringify(data, null, 2);
+        resultDiv.style.display = 'block';
+      } catch (error) {
+        resultDiv.className = 'result error';
+        resultDiv.style.display = 'block';
+        resultTitle.textContent = '错误';
+        resultContent.textContent = `请求失败: ${error.message}`;
+      } finally {
+        // 恢复按钮状态
+        this.disabled = false;
+        this.textContent = '初始化数据库';
+      }
+    });
+  </script>
+</body>
+</html> 

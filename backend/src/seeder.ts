@@ -635,12 +635,16 @@ export async function seed() {
 }
 
 // 如果直接运行此文件，则执行seed函数
-if (require.main === module) {
+// 使用更严格的条件，确保只有在显式运行该文件时才执行seed
+if (require.main === module && process.argv[1] && process.argv[1].endsWith('seeder.ts')) {
+  console.log('直接运行seeder.ts，执行数据库种子填充...');
   seed()
     .then(() => {
       console.log('Seeding completed successfully');
+      process.exit(0);
     })
     .catch(error => {
       console.error('Error during seeding:', error);
+      process.exit(1);
     });
 } 

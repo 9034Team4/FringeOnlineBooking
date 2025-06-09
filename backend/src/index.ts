@@ -1,3 +1,7 @@
+// 首先注册模块别名，确保在导入其他模块前执行
+import 'reflect-metadata';
+import 'module-alias/register';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -11,32 +15,21 @@ import path from 'path';
 import mime from 'mime';
 import { HealthController } from './controllers/HealthController';
 import { requestLogger, errorLogger } from './middlewares/logger';
+// 导入seed函数，但不自动执行
 import { seed } from './seeder';
 
-const app = express();
+// 设置NODE_ENV环境变量（如果未设置）
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+console.log(`Running in ${process.env.NODE_ENV} mode`);
 
-// 默认启用自动seed功能，可以通过环境变量DISABLE_AUTO_SEED=true禁用
-const shouldAutoSeed = process.env.DISABLE_AUTO_SEED !== 'true';
+const app = express();
 
 AppDataSource.initialize()
 .then(async () => {
   console.log('✅ MySQL connection established');
   app.set('db', AppDataSource);
   
-  // 默认执行seed操作，除非明确禁用
-  if (shouldAutoSeed) {
-    try {
-      console.log('🌱 Automatically running database seeder...');
-      await seed();
-      console.log('✅ Database seeded successfully');
-    } catch (error) {
-      console.error('❌ Error seeding database:', error);
-      // 即使seed失败，也继续启动应用
-      console.log('⚠️ Continuing application startup despite seeding error');
-    }
-  } else {
-    console.log('ℹ️ Auto-seeding is disabled');
-  }
+  // 移除自动seed的代码
 })
 .catch((err) => {
   console.error('❌ MySQL connection failed:', err);
@@ -54,6 +47,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(helmet());
+// 增加请求体大小限制，最大50MB
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -62,6 +56,9 @@ app.use(requestLogger);
 
 // API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// 静态文件服务
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Route mounting
 // 1. Main API routes
@@ -88,12 +85,17 @@ app.get('/health', (req, res) => {
 // 6. Static files for log visualizations
 app.use('/logs/visualizations', express.static(path.join(__dirname, '../logs/visualizations')));
 
-// 7. 404 handler
+// 7. 提供数据库初始化工具页面
+app.get('/db-init', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/db-init.html'));
+});
+
+// 8. 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });
 });
 
-// 8. Error logger middleware (should be after routes)
+// 9. Error logger middleware (should be after routes)
 app.use(errorLogger);
 
 // Start server

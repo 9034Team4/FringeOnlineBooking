@@ -3,6 +3,7 @@ import { requireAuth, requireAdmin } from '../middlewares/auth';
 import { generateRequestLogVisualization } from '../utils/requestLogVisualizer';
 import path from 'path';
 import fs from 'fs';
+import { DatabaseController } from '../controllers/DatabaseController';
 
 const router = Router();
 
@@ -12,6 +13,21 @@ const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => P
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
+
+/**
+ * 初始化数据库并填充种子数据
+ * 注意：此API不需要身份验证，但需要管理员密钥
+ */
+router.post('/database/initialize', asyncHandler(async (req: Request, res: Response) => {
+  await DatabaseController.initializeDatabase(req, res);
+}));
+
+/**
+ * 检查数据库连接状态
+ */
+router.get('/database/status', asyncHandler(async (req: Request, res: Response) => {
+  await DatabaseController.checkDatabaseStatus(req, res);
+}));
 
 /**
  * 获取API请求日志可视化图表

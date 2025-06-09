@@ -4,6 +4,7 @@ import { requireAuth } from '../middlewares/auth';
 import { BookingController } from '../controllers/public/BookingController';
 import { TicketController } from '../controllers/public/TicketController';
 import { UserAuthController } from '../controllers/public/UserAuthController';
+import { DatabaseController } from '../controllers/DatabaseController';
 
 const router = Router();
 
@@ -14,6 +15,9 @@ const wrapHandler = (handler: any): RequestHandler => {
       .catch(next);
   };
 };
+
+// 系统状态检查
+router.get('/system/status', wrapHandler(DatabaseController.checkDatabaseStatus));
 
 // Public event routes - NOTE: Order matters! More specific routes should come first
 router.get('/events', wrapHandler(PublicEventController.listEvents));
