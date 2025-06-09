@@ -68,7 +68,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
+import axiosInstance from '@/api/axiosInstance';
 import PageHeader from '../components/PageHeader.vue';
 import SeatSelector from '../components/SeatSelector.vue';
 
@@ -89,7 +89,7 @@ export default {
     const fetchEventDetails = async () => {
       try {
         loading.value = true;
-        const response = await axios.get(`/api/public/events/${eventId.value}`);
+        const response = await axiosInstance.get(`/public/events/${eventId.value}`);
         if (response.data.success) {
           event.value = response.data.data;
           console.log(event.value);

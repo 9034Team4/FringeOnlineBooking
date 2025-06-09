@@ -57,7 +57,7 @@
       </div>
       
       <div class="barcode">
-        <QRCode :value="generateQRValue()" :size="150" level="M" />
+        <VueQrcode :value="generateQRValue()" :size="150" :level="'M'" />
         <p class="barcode-note">Scan your QR code at the entry gate.</p>
       </div>
 
@@ -89,15 +89,15 @@
 
 <script>
 import { defineComponent, ref, onMounted } from 'vue';
+import axiosInstance from '@/api/axiosInstance';
 import { useAuthStore } from '../stores/auth';
-import axios from 'axios';
-import QRCode from 'qrcode.vue';
+import VueQrcode from 'vue-qrcode';
 import html2canvas from 'html2canvas';
 
 export default defineComponent({
   name: 'TicketCard',
   components: {
-    QRCode
+    VueQrcode
   },
   props: {
     // 仅需要票的ID，其它信息将通过API获取
@@ -230,7 +230,7 @@ export default defineComponent({
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         
         // 发送请求到后端
-        const response = await axios.post('/api/public/tickets/send-email', {
+        const response = await axiosInstance.post('/public/tickets/send-email', {
           ticketId: props.ticketId,
           imageData: imageData,
           subject: `${ticketData.value.eventTitle} - Ticket ${ticketData.value.ticketNumber}`,
@@ -317,7 +317,7 @@ export default defineComponent({
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         
         // 请求票据数据
-        const response = await axios.get(`/api/public/tickets/${props.ticketId}`, { headers });
+        const response = await axiosInstance.get(`/public/tickets/${props.ticketId}`, { headers });
         
         if (response.data.success) {
           const ticketInfo = response.data.data;

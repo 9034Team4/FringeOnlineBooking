@@ -91,7 +91,7 @@
 <script>
 import Upcoming from '@/components/UpcomingEventFilters.vue'
 import { Map as GMapMap, Marker as GMapMarker } from '@fawmi/vue-google-maps'
-import axios from 'axios'
+import axiosInstance from '@/api/axiosInstance'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -170,7 +170,7 @@ export default {
       try {
         loading.value = true
         console.log(`Fetching event details for ID: ${eventId}`)
-        const response = await axios.get(`/api/public/events/${eventId}`)
+        const response = await axiosInstance.get(`/public/events/${eventId}`)
         
         if (response.data.success) {
           console.log('Event data received:', response.data.data)

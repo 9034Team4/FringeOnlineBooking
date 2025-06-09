@@ -253,7 +253,7 @@
 <script>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import axiosInstance from '@/api/axiosInstance';
 import { useAuthStore } from '../stores/auth';
 
 export default {
@@ -349,7 +349,7 @@ export default {
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         
         // Fetch event details
-        const eventResponse = await axios.get(`/api/public/events/${eventId.value}`, { headers });
+        const eventResponse = await axiosInstance.get(`/public/events/${eventId.value}`, { headers });
         if (eventResponse.data.success) {
           event.value = eventResponse.data.data;
         } else {
@@ -371,8 +371,8 @@ export default {
         // Get remaining lock time from server
         try {
           console.log(`Fetching lock time for session: ${lockSessionId}`);
-          const lockTimeResponse = await axios.get(
-            `/api/public/events/${eventId.value}/seats/lock-time?lockSessionId=${lockSessionId}`,
+          const lockTimeResponse = await axiosInstance.get(
+            `/public/events/${eventId.value}/seats/lock-time?lockSessionId=${lockSessionId}`,
             { headers }
           );
           
@@ -468,7 +468,7 @@ export default {
         
         // Step 2: Confirm booking and generate tickets
         console.log('Confirming booking and generating tickets...');
-        const response = await axios.post('/api/public/bookings/confirm', paymentData, { headers });
+        const response = await axiosInstance.post('/public/bookings/confirm', paymentData, { headers });
         
         if (response.data.success) {
           // Move to step 3
@@ -543,7 +543,7 @@ export default {
           const selectedSeats = JSON.parse(selectedSeatsJson);
           
           // Use lock session ID to unlock seats
-          await axios.post(`/api/public/events/${eventId.value}/seats/unlock`, {
+          await axiosInstance.post(`/public/events/${eventId.value}/seats/unlock`, {
             lockSessionId,
             seats: selectedSeats.map(seat => ({
               row: String.fromCharCode(64 + seat.row), // Convert to letter row number (1->A, 2->B, etc.)
@@ -574,8 +574,8 @@ export default {
         const token = authStore.token;
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         
-        const response = await axios.get(
-          `/api/public/events/${eventId.value}/seats/lock-time?lockSessionId=${lockSessionId}`,
+        const response = await axiosInstance.get(
+          `/public/events/${eventId.value}/seats/lock-time?lockSessionId=${lockSessionId}`,
           { headers }
         );
         
@@ -613,7 +613,7 @@ export default {
         const selectedSeats = JSON.parse(selectedSeatsJson);
         
         // 使用锁定会话ID解锁座位
-        axios.post(`/api/public/events/${eventId.value}/seats/unlock`, {
+        axiosInstance.post(`/public/events/${eventId.value}/seats/unlock`, {
           lockSessionId,
           seats: selectedSeats.map(seat => ({
             row: String.fromCharCode(64 + seat.row),

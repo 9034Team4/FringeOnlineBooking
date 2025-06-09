@@ -69,7 +69,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import axiosInstance from '@/api/axiosInstance';
 import { useAuthStore } from '../stores/auth';
 import TicketCard from '../components/TicketCard.vue';
 
@@ -194,7 +194,7 @@ export default {
           return;
         }
         
-        const response = await axios.get('/api/public/user/tickets', {
+        const response = await axiosInstance.get('/public/user/tickets', {
           headers: { Authorization: `Bearer ${authStore.token}` }
         });
         
