@@ -16,7 +16,7 @@
         </form>
       </div>
 
-      <!-- Sign Up Form -->
+      <!-- Sign Up Form  -->
       <div class="sign-up-form">
         <h2>Sign Up</h2>
         <form @submit.prevent="handleSignUp">

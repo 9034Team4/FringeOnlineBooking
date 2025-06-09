@@ -35,7 +35,6 @@ AppDataSource.initialize()
     AppDataSource.entityMetadatas.map((e) => e.name)
   );
   
-  // 移除自动seed的代码
 })
 .catch((err) => {
   console.error('❌ MySQL connection failed:', err);

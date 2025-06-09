@@ -12,3 +12,5 @@ dist/
 Thumbs.db
 node_modules
 backend/logs/api-requests.log
+backend/logs/error.log
+backend/logs/migration.log
