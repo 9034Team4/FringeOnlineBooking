@@ -1,4 +1,4 @@
-import { AppDataSource } from './config/data-source';
+import { DataSource } from 'typeorm';
 import { User, UserRole } from './entities/User';
 import { Event, EventStatus } from './entities/Event';
 import { Booking, BookingStatus } from './entities/Booking';
@@ -9,6 +9,36 @@ import { Venue } from './entities/Venue';
 import bcryptjs from 'bcryptjs';
 import { Seat, SeatStatus } from './entities/Seat';
 import { Not, IsNull } from 'typeorm';
+import { Message } from './entities/Message';
+import path from 'path';
+
+// 创建一个独立的数据源配置，使用固定的连接参数
+const SeederDataSource = new DataSource({
+  type: 'mysql',
+  host: 'mysql',      // 使用图片中的配置
+  port: 3306,         // 使用图片中的配置
+  username: 'root',   // 使用图片中的配置
+  password: 'root123', // 使用图片中的配置
+  database: 'fringe2025bookingdb_dev', // 使用图片中的配置
+  synchronize: true,
+  logging: true,
+  entities: [
+    User, Event, Booking, Ticket, Payment, 
+    EventCategory, Venue, Seat, Message
+  ]
+});
+
+// 使用当前AppDataSource或SeederDataSource
+let AppDataSource: DataSource;
+
+// 尝试导入现有的AppDataSource，如果失败则使用SeederDataSource
+try {
+  AppDataSource = require('./config/data-source').AppDataSource;
+  console.log('使用现有的AppDataSource配置');
+} catch (error) {
+  console.log('无法导入现有的AppDataSource，使用独立的SeederDataSource配置');
+  AppDataSource = SeederDataSource;
+}
 
 // Mock event data based on frontend-public/src/mocks/events.js
 const mockEvents = [
@@ -123,10 +153,24 @@ export async function seed() {
   if (!AppDataSource.isInitialized) {
     try {
       await AppDataSource.initialize();
-      console.log('Database initialized for seeding');
+      console.log('数据库已初始化连接成功');
     } catch (error) {
-      console.error('Failed to initialize database for seeding:', error);
-      throw error;
+      console.error('数据库初始化失败:', error);
+      
+      // 如果使用的是导入的AppDataSource但初始化失败，尝试使用SeederDataSource
+      if (AppDataSource !== SeederDataSource) {
+        console.log('尝试使用独立的SeederDataSource配置重新连接...');
+        AppDataSource = SeederDataSource;
+        try {
+          await AppDataSource.initialize();
+          console.log('使用SeederDataSource连接成功');
+        } catch (secondError) {
+          console.error('SeederDataSource连接也失败:', secondError);
+          throw new Error('无法连接到数据库，请检查配置');
+        }
+      } else {
+        throw error;
+      }
     }
   }
   

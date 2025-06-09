@@ -24,22 +24,7 @@ export class DatabaseController {
         });
       }
       
-      // 确保数据库已连接
-      if (!AppDataSource.isInitialized) {
-        try {
-          await AppDataSource.initialize();
-          console.log('数据库已初始化');
-        } catch (error) {
-          console.error('数据库初始化失败:', error);
-          return res.status(500).json({
-            success: false,
-            message: '数据库连接失败',
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
-      }
-      
-      // 执行种子数据填充
+      // 执行种子数据填充 - 这里不需要手动初始化数据库，因为seed函数会处理
       console.log('开始填充种子数据...');
       await seed();
       console.log('种子数据填充成功');

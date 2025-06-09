@@ -12,7 +12,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "seed": "ts-node src/seeder.ts",
+    "seed:standalone": "ts-node src/scripts/runSeeder.ts",
     "seed:prod": "node dist/seeder.js",
+    "seed:prod:standalone": "node dist/scripts/runSeeder.js",
     "clean": "rimraf dist",
     "build:prod": "npm run clean && npm run build"
   },
