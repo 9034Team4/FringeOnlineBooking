@@ -117,8 +117,18 @@ async function clearData() {
   }
 }
 
-async function seed() {
-  await AppDataSource.initialize();
+// 将seed函数导出，使其可以在其他文件中使用
+export async function seed() {
+  // 检查数据源是否已初始化
+  if (!AppDataSource.isInitialized) {
+    try {
+      await AppDataSource.initialize();
+      console.log('Database initialized for seeding');
+    } catch (error) {
+      console.error('Failed to initialize database for seeding:', error);
+      throw error;
+    }
+  }
   
   // Clear existing data first
   await clearData();
@@ -622,11 +632,15 @@ async function seed() {
   console.log(`   - ${bookings.length} bookings`);
   console.log(`   - 0 tickets`);
   console.log(`   - 0 payments`);
-  
-  process.exit(0);
 }
 
-seed().catch((err) => {
-  console.error('Seeder error:', err);
-  process.exit(1);
-}); 
+// 如果直接运行此文件，则执行seed函数
+if (require.main === module) {
+  seed()
+    .then(() => {
+      console.log('Seeding completed successfully');
+    })
+    .catch(error => {
+      console.error('Error during seeding:', error);
+    });
+} 

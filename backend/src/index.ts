@@ -11,13 +11,32 @@ import path from 'path';
 import mime from 'mime';
 import { HealthController } from './controllers/HealthController';
 import { requestLogger, errorLogger } from './middlewares/logger';
+import { seed } from './seeder';
 
 const app = express();
 
+// 默认启用自动seed功能，可以通过环境变量DISABLE_AUTO_SEED=true禁用
+const shouldAutoSeed = process.env.DISABLE_AUTO_SEED !== 'true';
+
 AppDataSource.initialize()
-.then(() => {
+.then(async () => {
   console.log('✅ MySQL connection established');
   app.set('db', AppDataSource);
+  
+  // 默认执行seed操作，除非明确禁用
+  if (shouldAutoSeed) {
+    try {
+      console.log('🌱 Automatically running database seeder...');
+      await seed();
+      console.log('✅ Database seeded successfully');
+    } catch (error) {
+      console.error('❌ Error seeding database:', error);
+      // 即使seed失败，也继续启动应用
+      console.log('⚠️ Continuing application startup despite seeding error');
+    }
+  } else {
+    console.log('ℹ️ Auto-seeding is disabled');
+  }
 })
 .catch((err) => {
   console.error('❌ MySQL connection failed:', err);
