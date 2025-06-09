@@ -11,3 +11,4 @@ dist/
 .DS_Store
 Thumbs.db
 node_modules
+backend/logs/api-requests.log
