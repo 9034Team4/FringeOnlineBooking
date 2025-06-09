@@ -548,6 +548,7 @@ export const BookingController = {
               newVenueSeat.status = SeatStatus.AVAILABLE;
               newVenueSeat.price = seat.price || event.basePrice || 100;
               newVenueSeat.type = 'standard';
+              newVenueSeat.isAccessible = false; // 设置默认值为不可访问
               
               // 保存新创建的场馆座位
               const savedVenueSeat = await queryRunner.manager.save(newVenueSeat);
@@ -562,6 +563,7 @@ export const BookingController = {
               seatEntity.event = event;
               seatEntity.venue = event.venue;
               seatEntity.status = SeatStatus.AVAILABLE;
+              seatEntity.isAccessible = false; // 设置默认值为不可访问
             } else {
               console.log(`找到场馆座位: ${venueSeat.row}-${venueSeat.seatNumber}`);
               
@@ -574,6 +576,7 @@ export const BookingController = {
               seatEntity.event = event;
               seatEntity.venue = venueSeat.venue;
               seatEntity.status = SeatStatus.AVAILABLE;
+              seatEntity.isAccessible = venueSeat.isAccessible; // 从场馆座位复制可访问性设置
             }
             
             // 保存新座位
