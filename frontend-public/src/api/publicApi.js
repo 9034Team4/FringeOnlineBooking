@@ -14,7 +14,7 @@ export const auth = {
     axiosInstance.put('/public/auth/change-password', data),
 };
 
-// --- Events -----
+// --- Events ------
 export const events = {
   list: (params) =>
     axiosInstance.get('/public/events', { params }),

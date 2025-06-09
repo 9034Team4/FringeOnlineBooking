@@ -3,7 +3,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 /**
- * Represents an admin user with elevated privileges.
+ * Represents an admin user with elevated privileges. 
  */
 @Entity()
 export class Admin {
