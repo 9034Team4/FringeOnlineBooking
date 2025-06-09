@@ -5,6 +5,7 @@ import store from './store'
 import VueGoogleMaps from '@fawmi/vue-google-maps'
 import { createPinia } from 'pinia'
 
+
 const app = createApp(App)
 const pinia = createPinia()
 
