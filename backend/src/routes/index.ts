@@ -10,6 +10,7 @@ import adminStatsRouter from './adminStats';
 import staffRouter from './staff';
 import messageRouter from './message';
 import publicRoutes from './publicRoutes';
+import { seed } from '../seeder';
 
 const router = Router();
 
@@ -547,5 +548,22 @@ router.use('/messages', messageRouter);
 
 // Mount public routes
 router.use('/public', publicRoutes);
+
+// 添加一个直接执行seed的路由，不需要认证
+router.get('/seed-database', async (req: Request, res: Response) => {
+  try {
+    console.log('开始执行数据库种子填充...');
+    await seed();
+    console.log('数据库种子填充成功');
+    res.json({ success: true, message: '数据库初始化成功' });
+  } catch (error) {
+    console.error('数据库种子填充失败:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '数据库初始化失败', 
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
 
 export default router; 

@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import router from './routes';
 import publicRoutes from './routes/publicRoutes';
 import adminRoutes from './routes/adminRoutes';
+import dbRoutes from './routes/dbRoutes';
 import { swaggerUi, swaggerSpec } from './swagger';
 import { AppDataSource } from './config/data-source';
 import { connectRedis, redisClient } from './config/redis';
@@ -60,6 +61,23 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // 静态文件服务
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// 添加一个顶级路由，直接执行seed函数 - 确保这个路由在最前面
+app.get('/init-database', async (req, res) => {
+  try {
+    console.log('开始执行数据库种子填充...');
+    await seed();
+    console.log('数据库种子填充成功');
+    res.json({ success: true, message: '数据库初始化成功' });
+  } catch (error) {
+    console.error('数据库种子填充失败:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: '数据库初始化失败', 
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Route mounting
 // 1. Main API routes
 app.use('/api', router);
@@ -72,20 +90,23 @@ app.use('/api/events', publicRoutes);
 // 3. Admin API routes
 app.use('/api/admin', adminRoutes);
 
-// 4. Test route
+// 4. Database routes - 确保这个路由在前面
+app.use('/db', dbRoutes);
+
+// 5. Test route
 app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'API is working!' });
 });
 
-// 5. Health check route
+// 6. Health check route
 app.get('/health', (req, res) => {
   HealthController.checkStatus(req, res);
 });
 
-// 6. Static files for log visualizations
+// 7. Static files for log visualizations
 app.use('/logs/visualizations', express.static(path.join(__dirname, '../logs/visualizations')));
 
-// 7. 提供数据库初始化工具页面
+// 8. 提供数据库初始化工具页面
 app.get('/db-init', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/db-init.html'));
 });
@@ -95,12 +116,12 @@ app.get('/run-seeder', (req, res) => {
   res.redirect('/api/public/init-db');
 });
 
-// 8. 404 handler
+// 9. 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });
 });
 
-// 9. Error logger middleware (should be after routes)
+// 10. Error logger middleware (should be after routes)
 app.use(errorLogger);
 
 // Start server
