@@ -34,9 +34,9 @@ export const AppDataSource = new DataSource({
     //     EventCategory, Venue, Seat, Message
     // ],
     // 如果上面的方法在生产环境中不起作用，可以尝试使用以下配置
-    entities: isProduction 
-      ? [path.join(__dirname, '..', '**', '*.entity.{js,ts}'), path.join(__dirname, '..', 'entities', '**', '*.js')]
-      : [path.join(__dirname, '..', 'entities', '**', '*.ts')],
+    entities: isProduction
+    ? [path.join(__dirname, 'entities', '*.js')]
+    : [path.join(__dirname, '..', 'entities', '*.ts')],
     migrations: isProduction
       ? [path.join(__dirname, '..', 'migrations', '**', '*.js')]
       : [path.join(__dirname, '..', 'migrations', '**', '*.ts')],
