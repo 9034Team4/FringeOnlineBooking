@@ -27,55 +27,55 @@ export const events = {
 // --- Tickets ---
 export const tickets = {
   book: (data) =>
-    axiosInstance.post('/tickets/book', data),
+    axiosInstance.post('/public/tickets/book', data),
   get: (id) =>
-    axiosInstance.get(`/tickets/${id}`),
+    axiosInstance.get(`/public/tickets/${id}`),
   getMy: () =>
-    axiosInstance.get('/tickets/my'),
+    axiosInstance.get('/public/tickets/my'),
   cancel: (id, data) =>
-    axiosInstance.post(`/tickets/${id}/cancel`, data),
+    axiosInstance.post(`/public/tickets/${id}/cancel`, data),
   validate: (ticketId) =>
-    axiosInstance.get(`/tickets/validate/${ticketId}`),
+    axiosInstance.get(`/public/tickets/validate/${ticketId}`),
 };
 
 // --- Bookings ---
 export const bookings = {
   create: (data) =>
-    axiosInstance.post('/bookings', data),
+    axiosInstance.post('/public/bookings', data),
   getMy: () =>
-    axiosInstance.get('/bookings/my'),
+    axiosInstance.get('/public/bookings/my'),
   get: (id) =>
-    axiosInstance.get(`/bookings/${id}`),
+    axiosInstance.get(`/public/bookings/${id}`),
   cancel: (id) =>
-    axiosInstance.post(`/bookings/${id}/cancel`),
+    axiosInstance.post(`/public/bookings/${id}/cancel`),
   confirm: (id) =>
-    axiosInstance.post(`/bookings/${id}/confirm`),
+    axiosInstance.post(`/public/bookings/${id}/confirm`),
   export: (id) =>
-    axiosInstance.get(`/bookings/${id}/export`),
+    axiosInstance.get(`/public/bookings/${id}/export`),
 };
 
 // --- Seats ---
 export const seats = {
   getMap: (eventId) =>
-    axiosInstance.get(`/seats/${eventId}`),
+    axiosInstance.get(`/public/seats/${eventId}`),
   select: (data) =>
-    axiosInstance.post('/seats/select', data),
+    axiosInstance.post('/public/seats/select', data),
   lock: (data) =>
-    axiosInstance.post('/seats/lock', data),
+    axiosInstance.post('/public/seats/lock', data),
   release: (data) =>
-    axiosInstance.post('/seats/release', data),
+    axiosInstance.post('/public/seats/release', data),
 };
 
 // --- Payment ---
 export const payment = {
   process: (data) =>
-    axiosInstance.post('/payment/process', data),
+    axiosInstance.post('/public/payment/process', data),
   refund: (data) =>
-    axiosInstance.post('/payment/refund', data),
+    axiosInstance.post('/public/payment/refund', data),
 };
 
 // --- Notifications ---
 export const notifications = {
   sendEmail: (data) =>
-    axiosInstance.post('/notifications/email', data),
+    axiosInstance.post('/public/notifications/email', data),
 }; 

@@ -105,6 +105,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import axiosInstance from '@/api/axiosInstance';
 
 export default {
   name: 'SeatSelector',
@@ -143,6 +144,9 @@ export default {
     
     // Store seats locked by current user
     const myLockedSeats = ref([]);
+    
+    // 添加currentUserId变量定义
+    let currentUserId = null;
     
     // 获取行标签（A, B, C...）
     const getRowLabel = (rowIndex) => {
@@ -305,12 +309,8 @@ export default {
       try {
         loading.value = true;
         
-        // 获取所有可能的锁定会话ID
-        const allLockSessions = checkAllLockSessions();
-        console.log('All lock sessions:', allLockSessions);
-        
-        // 获取当前用户ID
-        const currentUserId = getCurrentUserId();
+        // 获取当前用户ID，用于检查座位锁定状态
+        currentUserId = getCurrentUserId();
         console.log('Current user ID:', currentUserId);
         
         // Update seat price if available
@@ -319,17 +319,12 @@ export default {
         }
         
         // Fetch seat data from API
-        const response = await fetch(`/api/public/events/${props.eventId}/seats`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch seat data');
-        }
+        const response = await axiosInstance.get(`/public/events/${props.eventId}/seats`);
+        console.log('Seat data from API:', response.data);
         
-        const data = await response.json();
-        console.log('Seat data from API:', data);
-        
-        if (data.success && data.data && data.data.rows) {
+        if (response.data.success && response.data.data && response.data.data.rows) {
           // 新的API返回格式是一个对象，包含行作为键
-          const rowsData = data.data.rows;
+          const rowsData = response.data.data.rows;
           const rowKeys = Object.keys(rowsData).sort(); // 按字母顺序排序行
           
           // 初始化座位数组
@@ -384,8 +379,8 @@ export default {
           console.log('Converted seat array:', seats.value);
           
           // 更新座位统计
-          if (data.data.stats) {
-            seatStats.value = data.data.stats;
+          if (response.data.data.stats) {
+            seatStats.value = response.data.data.stats;
           } else {
             calculateSeatStats();
           }
@@ -395,7 +390,7 @@ export default {
             adjustSeatSize();
           }, 0);
         } else {
-          console.error('Invalid seat data format:', data);
+          console.error('Invalid seat data format:', response.data);
           // 如果API返回的数据格式不正确，初始化默认座位
           initSeatArray();
         }
@@ -494,9 +489,6 @@ export default {
       isLocking.value = true;
       
       try {
-        // 导入axios实例
-        const axiosInstance = (await import('../api/axiosInstance')).default;
-        
         // 首先尝试锁定所选座位
         const response = await axiosInstance.post(`/public/events/${props.eventId}/seats/lock`, {
           seats: selected.map(seat => ({
@@ -651,25 +643,16 @@ export default {
       try {
         console.log(`Attempting to unlock seat ${getRowLabel(row)}${col + 1} with session ID: ${lockSessionId}`);
         
-        // 获取认证令牌
-        const token = authStore.token;
-        
-        const response = await fetch(`/api/public/events/${props.eventId}/seats/unlock`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // 添加认证令牌
-          },
-          body: JSON.stringify({
-            lockSessionId: lockSessionId,
-            seats: [{
-              row: getRowLabel(row),
-              seatNumber: (col + 1).toString()
-            }]
-          })
+        // 使用axiosInstance替代fetch
+        const response = await axiosInstance.post(`/public/events/${props.eventId}/seats/unlock`, {
+          lockSessionId: lockSessionId,
+          seats: [{
+            row: getRowLabel(row),
+            seatNumber: (col + 1).toString()
+          }]
         });
         
-        const result = await response.json();
+        const result = response.data;
         console.log('Unlock result:', result);
         
         if (result.success) {
@@ -795,23 +778,13 @@ export default {
         try {
           const selectedSeats = JSON.parse(selectedSeatsJson);
           
-          // 获取认证令牌
-          const token = authStore.isAuthenticated ? authStore.token : null;
-          
-          // 发送解锁请求
-          fetch(`/api/public/events/${props.eventId}/seats/unlock`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {}) // 如果有令牌则添加
-            },
-            body: JSON.stringify({
-              lockSessionId,
-              seats: selectedSeats.map((seat) => ({
-                row: String.fromCharCode(64 + seat.row), // 转换为字母行号 (1->A, 2->B, etc.)
-                seatNumber: seat.seatNumber.toString()
-              }))
-            })
+          // 使用axiosInstance替代fetch
+          axiosInstance.post(`/public/events/${props.eventId}/seats/unlock`, {
+            lockSessionId,
+            seats: selectedSeats.map((seat) => ({
+              row: String.fromCharCode(64 + seat.row), // 转换为字母行号 (1->A, 2->B, etc.)
+              seatNumber: seat.seatNumber.toString()
+            }))
           }).catch(err => console.error('Failed to unlock seats:', err));
           
           // 不要清除本地存储，让支付页面可以使用这些信息
