@@ -28,7 +28,6 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_DATABASE || 'fringe2025bookingdb_dev',
     synchronize: true,
     logging: isProduction ? false : true,
-    // 直接指定实体类，这样在开发和生产环境都能正确工作
     entities: [
         User,
         Event,
