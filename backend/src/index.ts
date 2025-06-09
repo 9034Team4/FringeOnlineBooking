@@ -28,13 +28,7 @@ const app = express();
 AppDataSource.initialize()
 .then(async () => {
   console.log('✅ MySQL connection established');
-  app.set('db', AppDataSource);
-
-  console.log(
-    '✔️ Entities loaded:',
-    AppDataSource.entityMetadatas.map((e) => e.name)
-  );
-  
+  app.set('db', AppDataSource);  
 })
 .catch((err) => {
   console.error('❌ MySQL connection failed:', err);
