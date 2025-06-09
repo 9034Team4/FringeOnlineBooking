@@ -16,8 +16,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // 获取实体文件的路径（根据环境不同选择不同路径）
 const entitiesDir = isProduction 
-  ? path.join(__dirname, '..', 'entities') // 生产环境路径
-  : path.join(__dirname, '..', 'entities'); // 开发环境路径
+  ? path.join(__dirname, '..', 'entities')
+  : path.join(__dirname, '..', 'entities'); 
 
 export const AppDataSource = new DataSource({
     type: 'mysql',
