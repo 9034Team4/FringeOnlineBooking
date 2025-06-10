@@ -15,5 +15,7 @@ node_modules
 backend/logs/api-requests.log
 backend/logs/error.log
 backend/logs/migration.log
+backend/logs/api-errors.log
 backend/logs/api-requests.log
+backend/logs/api-errors.log
 public

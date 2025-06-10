@@ -77,11 +77,11 @@ if (token) {
 async function handleLogin() {
   errorMsg.value = ''
   if (!email.value) {
-    errorMsg.value = '邮箱不能为空'
+    errorMsg.value = 'Email cannot be empty'
     return
   }
   if (!password.value) {
-    errorMsg.value = '密码不能为空'
+    errorMsg.value = 'Password cannot be empty'
     return
   }
   
@@ -104,11 +104,11 @@ async function handleLogin() {
       
       router.push('/dashboard')
     } else {
-      errorMsg.value = '登录失败，请检查响应数据格式'
+      errorMsg.value = 'Login failed, please check response data format'
     }
   } catch (error) {
-    console.error('登录错误:', error)
-    errorMsg.value = error.response?.data?.message || '登录失败，请检查您的凭据'
+    console.error('Login error:', error)
+    errorMsg.value = error.response?.data?.message || 'Login failed, please check your credentials'
   } finally {
     isLoading.value = false
   }

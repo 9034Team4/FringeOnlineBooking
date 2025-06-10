@@ -9,6 +9,7 @@ import { SeatController } from '../controllers/admin/SeatController';
 import { VenueController } from '../controllers/admin/VenueController';
 import { UploadController } from '../controllers/admin/UploadController';
 import { UserRole } from '../entities/User';
+import { AdminStatsController } from '../controllers/admin/AdminStatsController';
 
 const router = Router();
 
@@ -232,6 +233,49 @@ router.post('/seats/release-expired', adminAuth, (req: Request, res: Response) =
  */
 router.post('/seats/release', (req: Request, res: Response) => {
   SeatController.releaseUserLocks(req, res);
+});
+
+// ================= Admin Statistics =================
+/**
+ * Get user statistics
+ */
+router.get('/stats/users', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.totalUsers(req, res);
+});
+
+/**
+ * Get event statistics
+ */
+router.get('/stats/events', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.totalEvents(req, res);
+});
+
+/**
+ * Get booking statistics
+ */
+router.get('/stats/bookings', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.totalBookings(req, res);
+});
+
+/**
+ * Get revenue statistics
+ */
+router.get('/stats/revenue', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.revenue(req, res);
+});
+
+/**
+ * Get ticket distribution statistics
+ */
+router.get('/stats/ticket-distribution', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.ticketDistribution(req, res);
+});
+
+/**
+ * Get traffic statistics
+ */
+router.get('/stats/traffic', adminAuth, (req: Request, res: Response) => {
+  AdminStatsController.traffic(req, res);
 });
 
 export default router; 
