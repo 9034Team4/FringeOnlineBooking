@@ -16,3 +16,4 @@ backend/logs/api-requests.log
 backend/logs/error.log
 backend/logs/migration.log
 backend/logs/api-requests.log
+public

@@ -64,6 +64,16 @@ const errorMsg = ref('')
 const isLoading = ref(false)
 const showForgot = ref(false)
 
+// 创建axios实例
+const isProd = process.env.NODE_ENV === 'production'
+const apiBaseUrl = isProd ? 'http://3.25.85.247:3000/api' : 'http://localhost:3000/api'
+
+// 设置Authorization头
+const token = localStorage.getItem('token')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 async function handleLogin() {
   errorMsg.value = ''
   if (!email.value) {
@@ -77,17 +87,17 @@ async function handleLogin() {
   
   isLoading.value = true
   try {
-    const response = await axios.post('http://localhost:3000/api/admin/login', {
+    const response = await axios.post(`${apiBaseUrl}/admin/login`, {
       email: email.value,
       password: password.value
     })
     
     if (response.data && response.data.success && response.data.data && response.data.data.token) {
       // 保存token
-      localStorage.setItem('token', response.data.data.token)
+      localStorage.setItem('admin-token', response.data.data.token)
       
       // 保存用户信息
-      localStorage.setItem('user', JSON.stringify(response.data.data.user))
+      localStorage.setItem('admin-user', JSON.stringify(response.data.data.user))
       
       // 设置axios默认headers
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.token}`

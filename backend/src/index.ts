@@ -57,7 +57,7 @@ app.use(requestLogger);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 静态文件服务
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // 添加一个顶级路由，直接执行seed函数 - 确保这个路由在最前面
 app.get('/init-database', async (req, res) => {
@@ -87,6 +87,7 @@ app.use('/api/events', publicRoutes);
 
 // 3. Admin API routes
 app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes); // Also mount on /admin for backward compatibility
 
 // 4. Database routes - 确保这个路由在前面
 app.use('/db', dbRoutes);

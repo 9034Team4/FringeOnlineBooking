@@ -14,7 +14,7 @@ app.use(store)
 app.use(pinia)
 app.use(VueGoogleMaps, {
   load: {
-    key: 'AIzaSyC69mW6F039vRbkfhDl2SQ1cUod86UCU4s',
+    key: 'AIzaSyAmotJf5VUQkZ2cy4a7W_1-cxIIdIRU-ps',
   },
 })
 app.mount('#app')

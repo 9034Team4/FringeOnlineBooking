@@ -10,13 +10,14 @@ export const adminLoginSchema = z.object({
 export const eventCreateSchema = z.object({
   title: z.string().min(1),
   description: z.string(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-  venueId: z.string().uuid(),
-  price: z.number().positive(),
+  startDate: z.string(),
+  endDate: z.string(),
+  venueId: z.string(),
+  price: z.number().min(0),
   capacity: z.number().int().positive(),
   category: z.string(),
   status: z.enum(['draft', 'published', 'cancelled']),
+  imageUrl: z.string().nullable().optional(),
 });
 
 export const eventUpdateSchema = eventCreateSchema.partial();

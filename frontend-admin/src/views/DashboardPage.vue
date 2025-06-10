@@ -35,6 +35,16 @@ import WeeklyRevenueChart from '@/components/dashboard/WeeklyRevenueChart.vue'
 import PieChart from '@/components/dashboard/PieChart.vue'
 import TrafficBarChart from '@/components/dashboard/TrafficBarChart.vue'
 
+// 创建axios实例
+const isProd = process.env.NODE_ENV === 'production'
+const apiBaseUrl = isProd ? 'http://3.25.85.247:3000/api' : 'http://localhost:3000/api'
+
+// 设置Authorization头
+const token = localStorage.getItem('token')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 // Initialize data
 const userStats = ref({
   totalUsers: '0',
@@ -65,7 +75,7 @@ const trafficData = ref([])
 const fetchDashboardStats = async () => {
   try {
     // Get user statistics
-    const usersResponse = await axios.get('http://localhost:3000/api/admin/stats/users')
+    const usersResponse = await axios.get(`${apiBaseUrl}/admin/stats/users`)
     if (usersResponse.data && usersResponse.data.success) {
       userStats.value = {
         totalUsers: formatNumber(usersResponse.data.data.total),
@@ -76,7 +86,7 @@ const fetchDashboardStats = async () => {
     }
 
     // Get event statistics
-    const eventsResponse = await axios.get('http://localhost:3000/api/admin/stats/events')
+    const eventsResponse = await axios.get(`${apiBaseUrl}/admin/stats/events`)
     if (eventsResponse.data && eventsResponse.data.success) {
       eventStats.value = {
         totalEvents: formatNumber(eventsResponse.data.data.total),
@@ -87,7 +97,7 @@ const fetchDashboardStats = async () => {
     }
 
     // Get booking statistics
-    const bookingsResponse = await axios.get('http://localhost:3000/api/admin/stats/bookings')
+    const bookingsResponse = await axios.get(`${apiBaseUrl}/admin/stats/bookings`)
     if (bookingsResponse.data && bookingsResponse.data.success) {
       bookingStats.value = {
         totalBookings: formatNumber(bookingsResponse.data.data.total),
@@ -98,19 +108,19 @@ const fetchDashboardStats = async () => {
     }
 
     // Get revenue statistics
-    const revenueResponse = await axios.get('http://localhost:3000/api/admin/stats/revenue')
+    const revenueResponse = await axios.get(`${apiBaseUrl}/admin/stats/revenue`)
     if (revenueResponse.data && revenueResponse.data.success) {
       revenueData.value = revenueResponse.data.data
     }
 
     // Get ticket distribution
-    const ticketResponse = await axios.get('http://localhost:3000/api/admin/stats/ticket-distribution')
+    const ticketResponse = await axios.get(`${apiBaseUrl}/admin/stats/ticket-distribution`)
     if (ticketResponse.data && ticketResponse.data.success) {
       ticketDistribution.value = ticketResponse.data.data
     }
 
     // Get traffic statistics
-    const trafficResponse = await axios.get('http://localhost:3000/api/admin/stats/traffic')
+    const trafficResponse = await axios.get(`${apiBaseUrl}/admin/stats/traffic`)
     if (trafficResponse.data && trafficResponse.data.success) {
       trafficData.value = trafficResponse.data.data
     }
@@ -134,14 +144,7 @@ const formatNumber = (num) => {
 
 // Fetch data when component is mounted
 onMounted(() => {
-  // Get token
-  const token = localStorage.getItem('token')
-  if (token) {
-    // Set request headers
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    // Fetch statistics
-    fetchDashboardStats()
-  }
+  fetchDashboardStats()
 })
 </script>
 

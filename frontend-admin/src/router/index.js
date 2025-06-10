@@ -33,6 +33,12 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'event-details/:id',
+        name: 'event-details',
+        component: () => import('@/views/EventDetailsPage.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'msg',
         name: 'msg',
         component: () => import('@/views/MessagesPage.vue'),
@@ -65,7 +71,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = Boolean(localStorage.getItem('token'))
+  const isLoggedIn = Boolean(localStorage.getItem('admin-token'))
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     next({ path: '/login', query: { redirect: to.fullPath } })
