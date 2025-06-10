@@ -76,7 +76,7 @@ export const UploadController = {
       // 生成文件的公共URL
       const baseUrl = process.env.NODE_ENV === 'production' 
         ? 'http://3.25.85.247:3000'
-        : 'http://localhost:3000';
+        : 'http://3.25.85.247:3000';
       
       const fileUrl = `${baseUrl}/public/uploads/${req.file.filename}`;
       

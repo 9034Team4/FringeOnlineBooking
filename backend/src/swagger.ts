@@ -13,7 +13,7 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
+        url: 'http://3.25.85.247:3000/api',
       },
     ],
     components: {

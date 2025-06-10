@@ -109,7 +109,7 @@ npm start
 Once the server is running, open your browser to:
 
 ```
-http://localhost:3000/api-docs
+http://3.25.85.247:3000/api-docs
 ```
 
 Here, you can explore all available API endpoints with sample inputs and responses.
@@ -125,7 +125,7 @@ Here, you can explore all available API endpoints with sample inputs and respons
 To check if your services are running properly, go to:
 
 ```
-http://localhost:3000/api/health
+http://3.25.85.247:3000/api/health
 ```
 
 This returns a JSON with:

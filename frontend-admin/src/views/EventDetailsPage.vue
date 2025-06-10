@@ -186,7 +186,7 @@ import axios from 'axios';
 const isProd = process.env.NODE_ENV === 'production';
 
 const axiosInstance = axios.create({
-  baseURL: isProd ? `http://3.25.85.247:3000/api` : 'http://localhost:3000/api',
+  baseURL: isProd ? `http://3.25.85.247:3000/api` : 'http://3.25.85.247:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -445,7 +445,7 @@ async function unlockSeat(seatId) {
 //   }
   
 //   // 如果URL是相对路径，添加基础URL
-//   const baseUrl = isProd ? 'http://3.25.85.247:3000' : 'http://localhost:3000';
+//   const baseUrl = isProd ? 'http://3.25.85.247:3000' : 'http://3.25.85.247:3000';
   
 //   // 如果URL已经包含/public，则直接添加基础URL
 //   if (url.startsWith('/public/')) {

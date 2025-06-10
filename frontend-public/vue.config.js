@@ -6,7 +6,7 @@ module.exports = defineConfig({
     historyApiFallback: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://3.25.85.247:3000',
         changeOrigin: true
       }
     }

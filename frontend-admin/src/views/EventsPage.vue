@@ -272,7 +272,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const router = useRouter();
 
 const axiosInstance = axios.create({
-  baseURL: isProd ? `http://3.25.85.247:3000/api` : 'http://localhost:3000/api',
+  baseURL: isProd ? `http://3.25.85.247:3000/api` : 'http://3.25.85.247:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -572,7 +572,7 @@ async function uploadImage() {
     // 直接使用完整URL，避免baseURL问题
     const uploadUrl = isProd ? 
       'http://3.25.85.247:3000/api/admin/upload' : 
-      'http://localhost:3000/api/admin/upload';
+      'http://3.25.85.247:3000/api/admin/upload';
     
     // 使用fetch API代替axios，确保正确发送multipart/form-data
     const response = await fetch(uploadUrl, {
@@ -757,7 +757,7 @@ function fixImageUrl(url) {
   }
   
   // 如果URL是相对路径，添加基础URL
-  const baseUrl = isProd ? 'http://3.25.85.247:3000' : 'http://localhost:3000';
+  const baseUrl = isProd ? 'http://3.25.85.247:3000' : 'http://3.25.85.247:3000';
   
   // 如果URL已经包含/public，则直接添加基础URL
   if (url.startsWith('/public/')) {

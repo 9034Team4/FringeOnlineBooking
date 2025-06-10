@@ -66,7 +66,7 @@ const showForgot = ref(false)
 
 // 创建axios实例
 const isProd = process.env.NODE_ENV === 'production'
-const apiBaseUrl = isProd ? 'http://3.25.85.247:3000/api' : 'http://localhost:3000/api'
+const apiBaseUrl = isProd ? 'http://3.25.85.247:3000/api' : 'http://3.25.85.247:3000/api'
 
 // 设置Authorization头
 const token = localStorage.getItem('token')
