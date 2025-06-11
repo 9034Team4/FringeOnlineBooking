@@ -18,4 +18,3 @@ backend/logs/migration.log
 backend/logs/api-errors.log
 backend/logs/api-requests.log
 backend/logs/api-errors.log
-public
