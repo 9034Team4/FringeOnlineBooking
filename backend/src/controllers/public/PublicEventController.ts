@@ -317,7 +317,8 @@ export const PublicEventController = {
           // 如果找到了对应的事件座位，使用它的信息
           if (eventSeat) {
             status = eventSeat.status;
-            price = eventSeat.price;
+            // 使用事件基础价格，而不是座位特定价格
+            price = event.basePrice || 100;
             type = eventSeat.type;
             isAccessible = eventSeat.isAccessible;
           }
@@ -327,16 +328,18 @@ export const PublicEventController = {
             status = SeatStatus.LOCKED;
           }
           
-          // 添加一些VIP和轮椅座位
+          // 添加一些VIP和轮椅座位类型，但价格保持一致
           if (!eventSeat) {
             if (row <= 2 && (col >= 4 && col <= 9)) {
               type = 'vip';
-              price = event.basePrice * 1.5;
+              // 使用事件基础价格
+              price = event.basePrice || 100;
             } else if ((row === rowCount && (col === 1 || col === colCount)) || 
                       (row === 1 && (col === 1 || col === colCount))) {
               type = 'wheelchair';
               isAccessible = true;
-              price = event.basePrice * 0.8;
+              // 使用事件基础价格
+              price = event.basePrice || 100;
             }
           }
           

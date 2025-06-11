@@ -698,7 +698,7 @@ export const SeatController = {
           // 如果找到了对应的事件座位，使用它的信息
           if (eventSeat) {
             status = eventSeat.status;
-            price = eventSeat.price;
+            price = event.basePrice || 100;
             type = eventSeat.type;
             isAccessible = eventSeat.isAccessible;
             id = eventSeat.id;
@@ -709,16 +709,16 @@ export const SeatController = {
             status = SeatStatus.LOCKED;
           }
           
-          // 添加一些VIP和轮椅座位
+          // 添加一些VIP和轮椅座位类型，但价格保持一致
           if (!eventSeat) {
             if (row <= 2 && (col >= 4 && col <= 9)) {
               type = 'vip';
-              price = event.basePrice * 1.5;
+              price = event.basePrice || 100;
             } else if ((row === rowCount && (col === 1 || col === colCount)) || 
                       (row === 1 && (col === 1 || col === colCount))) {
               type = 'wheelchair';
               isAccessible = true;
-              price = event.basePrice * 0.8;
+              price = event.basePrice || 100;
             }
           }
           
@@ -792,7 +792,8 @@ export const SeatController = {
         for (let num = 1; num <= 10; num++) {
           const seatType = seatTypes[Math.floor(Math.random() * seatTypes.length)];
           const status = statuses[Math.floor(Math.random() * statuses.length)];
-          const price = seatType === 'vip' ? 100 : seatType === 'wheelchair' ? 50 : 75;
+          // 所有座位价格相同
+          const price = 75;
           
           mockSeats.push({
             id: id++,

@@ -491,7 +491,7 @@ export async function seed() {
               seats: Array.from({ length: 5 }, (_, seatIndex) => ({
                 seatNumber: `VIP-${String.fromCharCode(65 + rowIndex)}${seatIndex + 1}`,
                 type: 'vip',
-                price: event.basePrice * 1.5,
+                price: event.basePrice,
                 isAvailable: true
               }))
             }))
@@ -575,9 +575,8 @@ export async function seed() {
             eventSeat.event = event;
             eventSeat.status = SeatStatus.AVAILABLE;
             eventSeat.type = existingVenueSeat.type;
-            eventSeat.price = existingVenueSeat.type === 'vip' ? 
-              event.basePrice * 1.5 : 
-              (existingVenueSeat.type === 'wheelchair' ? event.basePrice * 0.8 : event.basePrice);
+            // 所有座位使用事件基础价格
+            eventSeat.price = event.basePrice;
             eventSeat.isAccessible = existingVenueSeat.isAccessible;
             console.log(`Mapping venue seat ${seatKey} to event`);
           } else {
@@ -594,11 +593,13 @@ export async function seed() {
             if (rowIdx < 2 && colIdx >= 3 && colIdx <= 8) {
               // VIP座位
               eventSeat.type = 'vip';
-              eventSeat.price = event.basePrice * 1.5;
+              // 使用事件基础价格
+              eventSeat.price = event.basePrice;
             } else if ((colIdx === 0 || colIdx === colCount - 1) && (rowIdx === 0 || rowIdx === rowCount - 1)) {
               // 轮椅座位
               eventSeat.type = 'wheelchair';
-              eventSeat.price = event.basePrice * 0.8;
+              // 使用事件基础价格
+              eventSeat.price = event.basePrice;
               eventSeat.isAccessible = true;
             } else {
               // 标准座位
